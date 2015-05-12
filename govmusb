@@ -1,0 +1,3 @@
+#!/bin/bash
+
+$DAQBIN/VMUSBReadout --daqconfig=$PWD/vmusbdaqconfig.tcl --ctlconfig=$PWD/vmusbctlconfig.tcl
