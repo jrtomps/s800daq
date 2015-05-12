@@ -14,15 +14,20 @@ set delay(firmware) /user/s800/server/fpga/gd16.bit
 
 # Initialize the timestamp with firmware
 #set xlmTstampSlot 4
-set xlmTstampSlot 16
-Module create xlm xlmTStampFw
-Module config xlmTStampFw -base [expr $xlmTstampSlot<<27]
-Module config xlmTStampFw -firmware $stamp(firmware)
+#Module create xlm xlmTStampFw
+#Module config xlmTStampFw -base [expr $xlmTstampSlot<<27]
+#Module config xlmTStampFw -firmware $stamp(firmware)
 
-## Create the script driver that will initialize the ppacs and crdcs
-#controlscript ctlScript_ -controllertype ccusb
-#ctlScript_ config -initscript Scripts/VM0079Init.tcl
+# Initialize the crdc firmware
+set crdc1_Slot 19 
+Module create xlm crdc1_FwLoad
+Module config crdc1_FwLoad -base [expr $crdc1_Slot<<27]
+Module config crdc1_FwLoad -firmware $crdc(firmware)
 #
+# Create the script driver that will initialize the ppacs and crdcs
+#controlscript ctlScript_ -controllertype vmusb
+#ctlScript_ configure -initscript Scripts/VM0079Init.tcl
+
 #Module create tcl ctlScript
 #Module config ctlScript -ensemble ctlScript_
 
