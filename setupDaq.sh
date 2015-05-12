@@ -11,7 +11,11 @@ fi
 unset DAQROOT
 source /usr/opt/nscldaq/$1/daqsetup.bash
 
+export TCLLIBPATH="$TCLLIBPATH $DAQROOT/TclLibs $DAQLIB"
+
 echo "Set the following environment variables"
 echo "DAQROOT = $DAQROOT" 
 echo "DAQBIN  = $DAQBIN" 
 echo "DAQLIB  = $DAQLIB" 
+echo "TCLLIBPATH  = $TCLLIBPATH" 
+
