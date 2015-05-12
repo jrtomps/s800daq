@@ -1,7 +1,7 @@
 # Begin sequence for s800 DAQ
 # VMUSB controller serial number is VM0079
 
-set VMUSB VM0079
+set VMUSB $::aController
 
 # Create module instances if they don't exist
 if {[lsearch [itcl::find objects] crdc1] == -1} {ACrdcXLM72 crdc1 $VMUSB 10}
@@ -20,9 +20,9 @@ flush stdout
 crdc1 Init ~/operations/daq/usb/Configs/s800crdc1v.tcl CRDC1_PADS
 crdc2 Init ~/operations/daq/usb/Configs/s800crdc2v.tcl CRDC2_PADS
 ppac Init ~/operations/daq/usb/Configs/s800tppacv.tcl TRACKI_PADS
-delay Init ~/operations/daq/usb/Configs/s800tdcdelayini.tcl TDCDELAY
-# Temporarily removed to achieve continuous time stamp mode (Sam's experiment)
-#stamp Init
+
+
+#delay Init ~/operations/daq/usb/Configs/s800tdcdelayini.tcl TDCDELAY
 
 # N568B shapers
 puts -nonewline "IC... "
@@ -35,12 +35,5 @@ puts -nonewline "Hodo2... "
 flush stdout
 hodoshp2 Init ~/operations/daq/usb/Configs/s800shpini.tcl Hodo_SHP2
 
-#mtdc Init
-#mtdc SetMultiEvent 0
-#mtdc SetBank0Start 15384; # -1000 ns (16384 corresponds to 0)
-##mtdc SetBank0Start 15684; # -700 ns (16384 corresponds to 0)
-#mtdc SetBank0Width 2000; # Window with (ns)
-#mtdc SetMultiHit 2; # set bank 0 to accept multihits
-#mtdc ResetFIFO
-#puts "Done."
+
 flush stdout
