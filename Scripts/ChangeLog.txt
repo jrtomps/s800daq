@@ -1,0 +1,3 @@
+Revision 6:
+
+Status of script files as of end of Gretina 2012 campaign (2012-12-26).
