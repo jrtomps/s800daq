@@ -30,8 +30,6 @@ Module create xlm crdc2_FwLoad
 Module config crdc2_FwLoad -base [expr $crdc2_Slot<<27]
 Module config crdc2_FwLoad -firmware $crdc(firmware)
 
-after 1000
-
 # Create the script driver that will initialize the ppacs and crdcs
 controlscript ctlScript_ -controllertype vmusb
 ctlScript_ configure -initscript Scripts/VM0079Init.tcl
