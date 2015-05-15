@@ -1,5 +1,5 @@
 
-
+if {0} {
 package require cvmusb
 package require controlscript
 package require Itcl
@@ -57,3 +57,4 @@ Module config ctlScript -ensemble ctlScript_
 
 
 
+}
