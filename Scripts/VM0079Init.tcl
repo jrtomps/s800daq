@@ -6,7 +6,7 @@ set VMUSB $::Globals::aController
 # Create module instances if they don't exist
 
 # uses the XLMTimestamp driver instead
-if {[lsearch [itcl::find objects] delay] == -1} {AGD16XLM72 delay $VMUSB 7}
+if {[lsearch [itcl::find objects] delayBox] == -1} {AGD16XLM72 delayBox $VMUSB 7}
 if {[lsearch [itcl::find objects] crdc1] == -1} {ACrdcXLM72 crdc1 $VMUSB 10}
 if {[lsearch [itcl::find objects] crdc2] == -1} {ACrdcXLM72 crdc2 $VMUSB 13}
 if {[lsearch [itcl::find objects] ppac] == -1} {APpacXLM72 ppac $VMUSB 16}
@@ -29,8 +29,8 @@ crdc2 ReleaseBus
 puts "Initializing ppac XLM72V"
 ppac Init /user/s800/operations/daq/usb/Configs/s800tppacv.tcl TRACKI_PADS
 
-puts "Initializing ppac XLM72V"
-delay Init /user/s800/operations/daq/usb/Configs/s800tdcdelayini.tcl TDCDELAY
+puts "Initializing delay XLM72V"
+delayBox Init /user/s800/operations/daq/usb/Configs/s800tdcdelayini.tcl TDCDELAY
 
 #puts "Please wait. Configuring Mesytec MTDC32. Firmware version: [mtdc GetFirmware]."
 #mtdc Init

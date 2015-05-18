@@ -5,6 +5,9 @@ package require readoutscript
 package require Itcl
 package require crdcxlm72
 package require ppacxlm72
+package require gd16xlm72
+package require caenn568b
+package require caenv288
 
 
 ## -- TAGS --
@@ -19,6 +22,8 @@ set ppacStart 0x5870
 set ppacFinish 0xf870
 
 marker create vmusbTag $vmusbCrateTag
+marker create tstampStartTag $tstampStart
+marker create tstampFinishTag $tstampFinish
 
 # Script driver for running the VM0079Begin, VM0079Event, and
 # VM0079End scripts. These handle the crdc and ppacs
@@ -52,8 +57,16 @@ vmusb config ctlr -forcescalerdump on
 vmusb config ctlr -readscalers on -incremental no
 vmusb config ctlr -scalera nimi1 -scalerb carry
 
+
+set tstampSlot 4
+XLMTimestamp create tstamp -base [expr $tstampSlot<<27]
+XLMTimestamp config tstamp -firmware /user/s800/server/fpga/stamp64.bit
+
 set rdoList [list vmusbTag \
                   ctlr \
+		  tstampStartTag \
+		  tstamp \
+                  tstampFinishTag \
                   rdoScript ]
 
 stack create eventStack
