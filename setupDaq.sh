@@ -9,7 +9,11 @@ if test $# -ne 1 ; then
 fi 
 
 unset DAQROOT
-source /usr/opt/nscldaq/$1/daqsetup.bash
+source /scratch/$1/daqsetup.bash
+
+#export DAQROOT=/scratch/$1
+#export DAQBIN=$DAQROOT/bin
+#export DAQLIB=$DAQROOT/lib
 
 export TCLLIBPATH="$TCLLIBPATH $DAQROOT/TclLibs $DAQLIB"
 

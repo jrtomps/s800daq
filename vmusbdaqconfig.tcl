@@ -8,12 +8,23 @@ package require ppacxlm72
 
 
 ## -- TAGS --
+set vmusbCrateTag 0xE800
+set tstampStart 0x5803
+set tstampFinish 0xF803
+set crdc1Start 0xcfdc
+set crdc1Finish 0xffdc
+set crdc2Start 0xcfdd
+set crdc2Finish 0xffdd
+set ppacStart 0x5870
+set ppacFinish 0xf870
+
+marker create vmusbTag $vmusbCrateTag
 
 # Script driver for running the VM0079Begin, VM0079Event, and
 # VM0079End scripts. These handle the crdc and ppacs
 readoutscript rdoScript -controllertype vmusb
 rdoScript configure -initscript Scripts/VM0079Begin.tcl
-#rdoScript configure -rdolistscript Scripts/VM0079Event.tcl
+rdoScript configure -rdolistscript Scripts/VM0079Event.tcl
 #rdoScript config -onendlist Scripts/VM0079End.tcl
 addtcldriver rdoScript
 
@@ -41,7 +52,9 @@ vmusb config ctlr -forcescalerdump on
 vmusb config ctlr -readscalers on -incremental no
 vmusb config ctlr -scalera nimi1 -scalerb carry
 
-set rdoList [list ctlr rdoScript]
+set rdoList [list vmusbTag \
+                  ctlr \
+                  rdoScript ]
 
 stack create eventStack
 stack config eventStack -modules $rdoList
@@ -53,7 +66,6 @@ stack config eventStack -delay 110
 readoutscript sclrScript -controllertype vmusb
 sclrScript configure -rdolistscript Scripts/VM0079Scaler.tcl
 addtcldriver sclrScript
-
 
 stack create sclrStack
 stack config sclrStack -trigger scaler -modules sclrScript -period 1
