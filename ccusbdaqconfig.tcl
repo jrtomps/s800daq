@@ -1,0 +1,2 @@
+
+# CCUSB DAQ config script
