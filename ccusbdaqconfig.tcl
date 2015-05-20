@@ -8,6 +8,8 @@ package require lecroy4300b
 package require phillips71xx
 package require lecroy4448
 
+marker create createTag 0xC800
+
 # Controller initialization
 #$CCUSB SetTriggerDelay 25
 #$CCUSB SetLAMMask 0; # Set trigger on NIM1
@@ -37,9 +39,15 @@ ccusb config ctlr -scalera event -scalerb carrya
 
 readoutscript rdoScript -controllertype ccusb
 rdoScript configure -initscript Scripts/CC0105Begin.tcl
-#rdoScript configure -rdolistscript Scripts/CC0105Event.tcl
+rdoScript configure -rdolistscript Scripts/CC0105Event.tcl
 #rdoScript configure -onendscript Scripts/CC0105Event.tcl
 addtcldriver rdoScript
+
+set rdoModules [list crateTag \
+                     ctlr \
+	             rdoScript]
+
+
 
 stack create rdoStack
 stack config rdoStack -type event -modules [list ctlr rdoScript]
