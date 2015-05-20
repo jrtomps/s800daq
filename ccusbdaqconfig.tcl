@@ -4,6 +4,9 @@
 package require readoutscript
 package require Itcl
 package require trigger2367
+package require lecroy4300b
+package require phillips71xx
+package require lecroy4448
 
 # Controller initialization
 #$CCUSB SetTriggerDelay 25
@@ -43,6 +46,12 @@ stack config rdoStack -type event -modules [list ctlr rdoScript]
 stack config rdoStack -delay 25 ;
 stack config rdoStack -lams 0 ; # trigger on NIM1
 stack config rdoStack -lamtimeout 10 ; # 50us
+
+LeCroy4434 create sclr -slot 16
+LeCroy4434 config sclr -incremental false
+
+stack create sclrStack
+stack config sclrStack -type scaler -modules [list sclr] -period 1
 
 
 
