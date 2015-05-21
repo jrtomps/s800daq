@@ -3,6 +3,7 @@
 
 set DAQROOT $::env(DAQROOT)
 lappend auto_path [file join $DAQROOT TclLibs]
+lappend auto_path [file join $DAQROOT lib]
 
 package require readoutscript
 package require Itcl

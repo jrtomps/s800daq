@@ -4,6 +4,7 @@
 
 set DAQROOT $::env(DAQROOT)
 lappend auto_path [file join $DAQROOT TclLibs]
+lappend auto_path [file join $DAQROOT lib]
 
 package require controlscript
 package require trigger2367
