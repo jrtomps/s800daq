@@ -28,14 +28,11 @@ puts "Initializing GD16 delay"
 delayBox Init /user/s800/operations/daq/usb/Configs/s800tdcdelayini.tcl TDCDELAY
 
 # N568B shapers
-puts -nonewline "IC... "
-flush stdout
+puts "Initializing IC Shaper "
 icshp Init /user/s800/operations/daq/usb/Configs/s800shpini.tcl IC_SHP
-puts -nonewline "Hodo1... "
-flush stdout
+puts "Initializing Hodo #1 Shaper "
 hodoshp1 Init /user/s800/operations/daq/usb/Configs/s800shpini.tcl Hodo_SHP1
-puts -nonewline "Hodo2... "
-flush stdout
+puts "Initializing Hodo #2 Shaper "
 hodoshp2 Init /user/s800/operations/daq/usb/Configs/s800shpini.tcl Hodo_SHP2
 
 puts "Done"
