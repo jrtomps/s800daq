@@ -1,5 +1,9 @@
 
-package require cvmusb
+set DAQROOT $::env(DAQROOT)
+lappend auto_path [file join $DAQROOT TclLibs]
+lappend auto_path [file join $DAQROOT lib]
+
+#package require cvmusb
 package require controlscript
 package require Itcl
 package require crdcxlm72

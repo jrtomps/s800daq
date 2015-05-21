@@ -1,6 +1,8 @@
 # Event stack for S800 DAQ
 # VMUSB controller serial number is VM0079
 
+puts "Adding VM0079Event.tcl to event stack"
+
 set VMUSB $::Globals::aController
 set event $::Globals::aReadoutList
 
@@ -26,3 +28,4 @@ ppac sReadAll $event
 #$event addDelay 5
 $event addMarker $ppacFinish
 
+puts "Done"

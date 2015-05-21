@@ -38,4 +38,5 @@ puts -nonewline "Hodo2... "
 flush stdout
 hodoshp2 Init /user/s800/operations/daq/usb/Configs/s800shpini.tcl Hodo_SHP2
 
+puts "Done"
 flush stdout

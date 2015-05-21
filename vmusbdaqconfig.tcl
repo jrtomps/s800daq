@@ -1,5 +1,7 @@
 
 
+set DAQROOT $::env(DAQROOT)
+lappend auto_path [file join $DAQROOT TclLibs]
 
 package require readoutscript
 package require Itcl
@@ -84,6 +86,7 @@ vmusb config ctlr -scalera nimi1 -scalerb carry
 set tstampSlot 4
 XLMTimestamp create tstamp -base [expr $tstampSlot<<27]
 XLMTimestamp config tstamp -firmware /user/s800/server/fpga/stamp64.bit
+XLMTimestamp config tstamp -loadfirmware off
 
 set rdoList [list vmusbTag \
                   ctlr \

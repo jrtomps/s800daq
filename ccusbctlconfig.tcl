@@ -2,6 +2,9 @@
 # CCUSB Slow controls config script
 
 
+set DAQROOT $::env(DAQROOT)
+lappend auto_path [file join $DAQROOT TclLibs]
+
 package require controlscript
 package require trigger2367
 

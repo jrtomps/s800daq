@@ -1,6 +1,9 @@
 
 # CCUSB DAQ config script
 
+set DAQROOT $::env(DAQROOT)
+lappend auto_path [file join $DAQROOT TclLibs]
+
 package require readoutscript
 package require Itcl
 package require trigger2367
