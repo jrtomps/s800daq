@@ -20,10 +20,14 @@ set crdc2Start 0xcfdd
 set crdc2Finish 0xffdd
 set ppacStart 0x5870
 set ppacFinish 0xf870
+set mtdcStart 0x0ddc
+set mtdcFinish 0xfddc
 
 marker create vmusbTag $vmusbCrateTag
 marker create tstampStartTag $tstampStart
 marker create tstampFinishTag $tstampFinish
+marker create mtdcStartTag $mtdcStart
+marker create mtdcFinishTag $mtdcFinish
 
 # Script driver for running the VM0079Begin, VM0079Event, and
 # VM0079End scripts. These handle the crdc and ppacs
@@ -33,8 +37,27 @@ rdoScript configure -rdolistscript Scripts/VM0079Event.tcl
 #rdoScript config -onendlist Scripts/VM0079End.tcl
 addtcldriver rdoScript
 
-# create the mtdc driver
-#mtdc create tdc -base 0x40000000
+# -- MTDC --
+#itcl::body AMesytecMTDC32::Init {} {
+#	SetIRQVector 0
+#	SetIRQLevel 0
+#	SetMultiEvent 3
+#	SetMaxTransfer 1
+#	SetDataLength 2
+#	SetResolution 6; # 62.5 ps per channel
+#	SetBank0Trigger 1
+#	SetBank0Start 15384; # -1000 ns (16384 corresponds to 0)
+#	SetBank0Width 1000; # Window with (ns)
+#	ResetFIFO
+#}
+mtdc create tdc -base 0x40000000
+mtdc config tdc -ipl 0 -vector 0
+mtdc config tdc -maxtransfers 1
+mtdc config tdc -datalen 32
+mtdc config tdc -resolution 62.5ps
+mtdc config tdc -bank0triggersource Tr0
+mtdc config tdc -bank0winstart 15384
+mtdc config tdc -bank0winwidth 1000
 
 ## Crate Controller initialization
 #$VMUSB SetBufferLength 13000
@@ -67,7 +90,10 @@ set rdoList [list vmusbTag \
 		  tstampStartTag \
 		  tstamp \
                   tstampFinishTag \
-                  rdoScript ]
+                  rdoScript \
+		  mtdcStartTag \
+		  tdc \
+		  mtdcFinishTag ]
 
 stack create eventStack
 stack config eventStack -modules $rdoList

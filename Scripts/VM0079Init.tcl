@@ -32,5 +32,3 @@ ppac Init /user/s800/operations/daq/usb/Configs/s800tppacv.tcl TRACKI_PADS
 puts "Initializing delay XLM72V"
 delayBox Init /user/s800/operations/daq/usb/Configs/s800tdcdelayini.tcl TDCDELAY
 
-#puts "Please wait. Configuring Mesytec MTDC32. Firmware version: [mtdc GetFirmware]."
-#mtdc Init
