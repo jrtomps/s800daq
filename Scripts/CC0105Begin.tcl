@@ -3,8 +3,7 @@
 
 set CCUSB $::Globals::aController
 global runinfo
-#source /user/s800/operations/daq/usb/Configs/s800daqinithresholds.tcl
-source Scripts/s800daqinithresholds.tcl
+source /user/s800/operations/daq/usb/Configs/s800daqinithresholds.tcl
 # Copy configuration files if writing to disk
 #if {$runinfo(save)} {
 #	file copy -force /user/s800/operations/daq/usb/Configs/s800daqinithresholds.tcl $runinfo(path)/run$runinfo(number)/s800daqinithresholds.tcl
