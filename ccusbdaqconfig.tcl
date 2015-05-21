@@ -8,7 +8,8 @@ package require lecroy4300b
 package require phillips71xx
 package require lecroy4448
 
-marker create createTag 0xC800
+marker create crateTag 0xC800
+marker create sclr4434Tag  0x4434
 
 # Controller initialization
 #$CCUSB SetTriggerDelay 25
@@ -43,14 +44,23 @@ rdoScript configure -rdolistscript Scripts/CC0105Event.tcl
 #rdoScript configure -onendscript Scripts/CC0105Event.tcl
 addtcldriver rdoScript
 
+
+# The script that sets the trigger Go bit to 1 at run start
+# and also set it to 0 at the end of the run
+readoutscript startStopScript -controllertype ccusb
+startStopScript configure -initscript Scripts/MainBegin.tcl
+startStopScript configure -onendscript Scripts/MainEnd.tcl
+addtcldriver startStopScript
+
 set rdoModules [list crateTag \
                      ctlr \
-	             rdoScript]
+	             rdoScript \
+		     startStopScript ]
 
 
 
 stack create rdoStack
-stack config rdoStack -type event -modules [list ctlr rdoScript]
+stack config rdoStack -type event -modules $rdoModules
 stack config rdoStack -delay 25 ;
 stack config rdoStack -lams 0 ; # trigger on NIM1
 stack config rdoStack -lamtimeout 10 ; # 50us
@@ -58,8 +68,14 @@ stack config rdoStack -lamtimeout 10 ; # 50us
 LeCroy4434 create sclr -slot 16
 LeCroy4434 config sclr -incremental false
 
+set sclrModules [list crateTag \
+		      sclr4434Tag \
+		      sclr ]
+
 stack create sclrStack
-stack config sclrStack -type scaler -modules [list sclr] -period 1
+stack config sclrStack -type scaler 
+stack config sclrStack -modules $sclrModules
+stack config sclrStack -period 1
 
 
 
