@@ -1,0 +1,3 @@
+#!/bin/bash
+
+$DAQBIN/CCUSBReadout --daqconfig=$PWD/ccusbdaqconfig.tcl --ctlconfig=$PWD/ccusbctlconfig.tcl
