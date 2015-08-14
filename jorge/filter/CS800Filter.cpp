@@ -229,10 +229,9 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 
 
 
+  delete event;
 
-
-  
-  return static_cast<CRingItem*>(pItem);    
+  return publish;
 }
 
 
