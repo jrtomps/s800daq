@@ -9,13 +9,11 @@ if test $# -ne 1 ; then
 fi 
 
 unset DAQROOT
-source /scratch/$1/daqsetup.bash
+source /usr/opt/nscldaq/$1/daqsetup.bash
 
-#export DAQROOT=/scratch/$1
-#export DAQBIN=$DAQROOT/bin
-#export DAQLIB=$DAQROOT/lib
+unset TCLLIBPATH
 
-export TCLLIBPATH="$TCLLIBPATH $DAQROOT/TclLibs $DAQLIB"
+#export TCLLIBPATH="$TCLLIBPATH $DAQROOT/TclLibs $DAQLIB"
 
 echo "Set the following environment variables"
 echo "DAQROOT = $DAQROOT" 

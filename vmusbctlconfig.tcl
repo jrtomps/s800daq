@@ -1,3 +1,5 @@
+###################################
+# Load firmwares of XLM modules  
 
 set DAQROOT $::env(DAQROOT)
 lappend auto_path [file join $DAQROOT TclLibs]
@@ -50,6 +52,7 @@ Module config ppac_FwLoad -base [expr $ppac_Slot<<27]
 Module config ppac_FwLoad -firmware $ppac(firmware)
 Module config ppac_FwLoad -validate on -signature [expr 0xdaba0005]
 
+###################################
 # Create the script driver that will initialize the ppacs and crdcs
 controlscript ctlScript_ -controllertype vmusb
 ctlScript_ configure -initscript Scripts/VM0079Init.tcl

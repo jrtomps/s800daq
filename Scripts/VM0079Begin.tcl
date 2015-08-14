@@ -23,9 +23,9 @@ puts "Initializing CRDC #2"
 crdc2 Init /user/s800/operations/daq/usb/Configs/s800crdc2v.tcl CRDC2_PADS
 puts "Initializing PPAC" 
 ppac Init /user/s800/operations/daq/usb/Configs/s800tppacv.tcl TRACKI_PADS
-
 puts "Initializing GD16 delay"
 delayBox Init /user/s800/operations/daq/usb/Configs/s800tdcdelayini.tcl TDCDELAY
+
 
 # N568B shapers
 puts "Initializing IC Shaper "

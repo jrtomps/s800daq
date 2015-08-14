@@ -31,15 +31,20 @@ marker create tstampFinishTag $tstampFinish
 marker create mtdcStartTag $mtdcStart
 marker create mtdcFinishTag $mtdcFinish
 
-# Script driver for running the VM0079Begin, VM0079Event, and
-# VM0079End scripts. These handle the crdc and ppacs
+
+#################
+# Script driver for XLM (CRDCs, PPACs, Delay box), and Hosocope/IC shapers
+# It runs the VM0079Begin, VM0079Event, and VM0079End scripts
 readoutscript rdoScript -controllertype vmusb
-rdoScript configure -initscript Scripts/VM0079Begin.tcl
+rdoScript configure -initscript Scripts/VM0079Begin.tcl 
 rdoScript configure -rdolistscript Scripts/VM0079Event.tcl
 #rdoScript config -onendlist Scripts/VM0079End.tcl
 addtcldriver rdoScript
 
-# -- MTDC --
+
+
+#################
+# -- TDC --
 #itcl::body AMesytecMTDC32::Init {} {
 #	SetIRQVector 0
 #	SetIRQLevel 0
@@ -58,9 +63,14 @@ mtdc config tdc -maxtransfers 1
 mtdc config tdc -datalen 32
 mtdc config tdc -resolution 62.5ps
 mtdc config tdc -bank0triggersource Tr0
-mtdc config tdc -bank0winstart 15384
-mtdc config tdc -bank0winwidth 1000
+mtdc config tdc -bank0winstart 15384; # -1000 ns (16384 corresponds to 0)
+mtdc config tdc -bank0winwidth 1000 ;# Window with (ns)
 
+
+
+
+#################
+# --VM-USB --
 ## Crate Controller initialization
 #$VMUSB SetBufferLength 13000
 #$VMUSB SetBufferMode 0
@@ -80,14 +90,33 @@ vmusb config ctlr -bufferlength 13k
 # vmusb config ctlr -bulktransfermode default
 vmusb config ctlr -forcescalerdump on
 vmusb config ctlr -readscalers on -incremental no
-vmusb config ctlr -scalera nimi1 -scalerb carry
+vmusb config ctlr -scalera nimi1 -scalerb carry; # Set scaler A to I1 and scaler B to A overflow
 
 
+
+#################
+# -- XLM Time stamp --
 set tstampSlot 4
 XLMTimestamp create tstamp -base [expr $tstampSlot<<27]
 XLMTimestamp config tstamp -firmware /user/s800/server/fpga/stamp64.bit
 XLMTimestamp config tstamp -loadfirmware off
 
+
+#################
+# Script driver for running VM0079Scaler.tcl
+readoutscript sclrScript -controllertype vmusb
+sclrScript configure -rdolistscript Scripts/VM0079Scaler.tcl
+addtcldriver sclrScript
+
+
+
+
+
+
+
+
+##########################################################################################
+# -- Define stack to include all VME modules (XLMs, shapers, TDC, VM-USB controller)
 set rdoList [list vmusbTag \
                   ctlr \
 		  tstampStartTag \
@@ -99,16 +128,12 @@ set rdoList [list vmusbTag \
 		  mtdcFinishTag ]
 
 stack create eventStack
-stack config eventStack -modules $rdoList
+stack config eventStack -modules $rdoList ;# Stack is made of rdoList modules
 stack config eventStack -trigger nim1
 stack config eventStack -delay 110
 
-
-# Script driver for running VM0079Scaler.tcl
-readoutscript sclrScript -controllertype vmusb
-sclrScript configure -rdolistscript Scripts/VM0079Scaler.tcl
-addtcldriver sclrScript
-
+##########################################################################################
+# -- Define stack to include scalers
 stack create sclrStack
 stack config sclrStack -trigger scaler -modules sclrScript -period 1
 

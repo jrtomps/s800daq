@@ -32,6 +32,9 @@ source /user/s800/operations/daq/usb/Configs/s800daqinithresholds.tcl
 #	}
 #}
 
+
+
+########################################################################################
 # Module declarations
 #if {[lsearch [itcl::find objects] nimout] == -1} {ACAENV262 nimout $VMUSB 0x444400}
 if {[lsearch [itcl::find objects] trigger] == -1} {ATrigger2367 trigger $CCUSB 17}
@@ -51,6 +54,9 @@ if {[lsearch [itcl::find objects] s800adc] == -1} {APhillips71xx s800adc $CCUSB 
 puts "Executing begin sequence of CAMAC crate"
 flush stdout
 
+
+########################################################################################
+# Inititalization Trigger ulm 
 # This method assumes filename points to an "old" type Tcl file defining parameters
 # in an array called "TRIGGER"
 proc initATrigger2367 {device node filename} {
@@ -63,12 +69,15 @@ proc initATrigger2367 {device node filename} {
 	}
 }
 puts "\tInitializing Trigger2367"
-# Temporarily removed to achieve continuous time stamp mode (Sam's experiment)
+# Temporarily removed to achieve continuous time stamp mode (Sam's experiment) ??????????
 trigger Go 0; # Inhibit triggers and time stamp clock
 trigger Clear; # Clear latches, trigger register and time stamp
 trigger Enable 0; # Enable external sync signal
 initATrigger2367 $CCUSB 17 /user/s800/operations/daq/usb/Configs/s800trigger.tcl
-#trigger Select 1; # 0: internal clock 1: external clock
+trigger Select 0; # 0: internal clock 1: external clock
+
+
+
 
 #cfd EnableOnlyChannels [list 0 1 2 3 4 6 7 8 9 10 14] ;#Enabled additional channels 2,3,4 for 09041B (JP, 03/11/2014))
 #for {set i 0} {$i < 8} {incr i} {cfd SetThreshold $i $CFD1([format "thr%.2d" $i])}
@@ -94,12 +103,20 @@ initATrigger2367 $CCUSB 17 /user/s800/operations/daq/usb/Configs/s800trigger.tcl
 #hcfd2 Threshold 9 9
 #hcfd2 Threshold 13 8
 #
+
+########################################################################################
+# Inititalization Plastic Scintillator QDC (FERA)
 puts "\tInitializing Lecroy4300B - Scintillator"
 scint Clear
 scint SetControlRegister 0x7800; # CAMAC LAM enabled; CAMAC sequential read; Ped subtraction enabled
 set peds ""; for {set i 0} {$i < 16} {incr i} {lappend peds $SCINT_ENERGY([format "ped%.2d" $i])}
 scint SetPedestals $peds
 
+
+
+########################################################################################
+# Inititalization Phillips 71xx modules
+#
 # General procedure to initialize the Phillips ADCs and TDCs
 proc InitPhillips71xx {module name} {
 	upvar 1 $name n

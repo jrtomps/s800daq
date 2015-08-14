@@ -19,13 +19,13 @@ if {[lsearch [itcl::find objects] ppac] == -1} {APpacXLM72 ppac $VMUSB 16}
 puts "\tInitializing crdc1 XLM72V"
 crdc1 Init /user/s800/operations/daq/usb/Configs/s800crdc1v.tcl CRDC1_PADS
 crdc1 AccessBus 1
-for {set i 0} {$i < 100} {incr i 4} {crdc1 Write srama $i 0}
+for {set i 0} {$i < 100} {incr i 4} {crdc1 Write srama $i 0} ;# Write zero in the first 100 32-bit "memory cells" (SRAMA)
 crdc1 ReleaseBus
 
 puts "\tInitializing crdc2 XLM72V."
 crdc2 Init /user/s800/operations/daq/usb/Configs/s800crdc2v.tcl CRDC2_PADS
 crdc2 AccessBus 1
-for {set i 0} {$i < 100} {incr i 4} {crdc2 Write srama $i 0}
+for {set i 0} {$i < 100} {incr i 4} {crdc2 Write srama $i 0} ;# Write zero in the first 100 32-bit "memory cells" (SRAMA)
 crdc2 ReleaseBus
 
 puts "\tInitializing ppac XLM72V"
