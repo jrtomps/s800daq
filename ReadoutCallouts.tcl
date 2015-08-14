@@ -1,5 +1,11 @@
+set here [file dirname [file normalize [info script]]]
+lappend auto_path [file join $::env(DAQROOT) TclLibs]
+lappend auto_path $here
 
-package require evbcallouts
+package require evbcallouts 
+package require ActionFilter
+
+ActionFilter::register
 
 ::EVBC::useEventBuilder
 
@@ -7,5 +13,5 @@ package require evbcallouts
 ::EVBC::registerRingSource tcp://spdaq48/rawvmusb libdummytstamp.so 1  "VMUSB"
 
 proc OnStart {} {
-::EVBC::initialize -restart false -glombuild true -glomdt 10 -destring s800built
+	::EVBC::initialize -restart false -glombuild true -glomdt 10 -destring s800built
 }
