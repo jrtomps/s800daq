@@ -45,9 +45,18 @@ class S800FilterTest : public CppUnit::TestFixture
 
     CRingItem* pFiltered = pFilter->handlePhysicsEventItem(pItem);
 
-    cout << pItem->toString() << endl;
-    cout << pResultItem->toString() << endl;
+    uint8_t* pExpBytes = reinterpret_cast<uint8_t*>(pResultItem->getItemPointer());
+    size_t   nExpectedBytes = pResultItem->getBodySize() + sizeof(BodyHeader) + sizeof(RingItemHeader);
+    uint8_t* pFiltBytes = reinterpret_cast<uint8_t*>(pFiltered->getItemPointer());
+    size_t   nFilteredBytes = pFiltered->getBodySize() + sizeof(BodyHeader) + sizeof(RingItemHeader);
+
     cout << pFiltered->toString() << endl;
+    cout << pResultItem->toString() << endl;
+
+    size_t nToCompare = min(nExpectedBytes, nFilteredBytes);
+    CPPUNIT_ASSERT_MESSAGE(
+	"Filter output must match that produced by old S800",
+	equal(pExpBytes, pExpBytes + nToCompare, pFiltBytes));
 
     delete pFiltered;
   }
