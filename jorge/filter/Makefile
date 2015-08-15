@@ -29,6 +29,8 @@ OBJECTS = CS800Filter.o FragmentIndex.o SkeletonMain.o
 
 USERFILTER = UserFilter
 
+all : $(USERFILTER) unittests check
+
 $(USERFILTER): $(OBJECTS) 
 	   $(CXX) $(OBJECTS) -o $@ $(USERLDFLAGS) $(LDFLAGS)
 
@@ -37,4 +39,8 @@ $(USERFILTER): $(OBJECTS)
 clean:
 	-rm -f *.o 
 
+unittests : TestRunner.o filtertests.o CS800Filter.o FragmentIndex.o
+	$(CXX) -I$(shell pwd) -o $@ $^ $(USERLDFLAGS) $(LDFLAGS) -lcppunit
 
+check : 
+	./unittests
