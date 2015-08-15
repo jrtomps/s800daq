@@ -4,7 +4,10 @@
 #include <CPhysicsEventItem.h>
 #include <CRingItemFactory.h>
 #include <DataFormat.h>
+
+#define private public
 #include <CS800Filter.h>
+#undef private
 
 #include <string>
 #include <vector>
@@ -19,6 +22,7 @@ class S800FilterTest : public CppUnit::TestFixture
 {
   CPPUNIT_TEST_SUITE(S800FilterTest);
   CPPUNIT_TEST(test);
+  CPPUNIT_TEST(parseCCUSB_0);
   CPPUNIT_TEST_SUITE_END();
 
   private:
@@ -50,17 +54,45 @@ class S800FilterTest : public CppUnit::TestFixture
     uint8_t* pFiltBytes = reinterpret_cast<uint8_t*>(pFiltered->getItemPointer());
     size_t   nFilteredBytes = pFiltered->getBodySize() + sizeof(BodyHeader) + sizeof(RingItemHeader);
 
-    cout << pFiltered->toString() << endl;
-    cout << pResultItem->toString() << endl;
+//    cout << pFiltered->toString() << endl;
+//    cout << pResultItem->toString() << endl;
 
     size_t nToCompare = min(nExpectedBytes, nFilteredBytes);
     CPPUNIT_ASSERT_MESSAGE(
-	"Filter output must match that produced by old S800",
-	equal(pExpBytes, pExpBytes + nToCompare, pFiltBytes));
+  "Filter output must match that produced by old S800",
+  equal(pExpBytes, pExpBytes + nToCompare, pFiltBytes));
 
     delete pFiltered;
   }
 
+  void parseCCUSB_0() {
+    fillBodyFromFile(pItem, "parseCCUSB_0_in.dat");
+    cout << pItem->toString() << endl;
+  
+    EventType event;
+    uint16_t* pBody = reinterpret_cast<uint16_t*>(pItem->getBodyPointer());
+    int status = pFilter->parseData(pItem->getSourceId(),
+            pItem->getBodySize()/sizeof(uint16_t),
+            pItem->getEventTimestamp(),
+            pBody,
+            &event);
+      
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("ULM Trigger pattern",
+                    uint16_t(0x0010), event.trigger_pattern);
+
+    uint16_t feras[] = {
+    0x8800, 0x0816, 0x7164, 0xfff7, 0x001c, 0x102d, 0x2027,
+    0x401f, 0x5035, 0x6031, 0x703e, 0x8019, 0x9025, 0xa029,
+    0xb036, 0xc032, 0xd030, 0xe027, 0xf035};
+    
+    for (int i=0; i<16; i++) {
+       string msg = "FERA[" + to_string(i) + "]";
+       CPPUNIT_ASSERT_EQUAL_MESSAGE(
+                       msg.c_str(),
+                       feras[i], event.fera[i]);
+    }
+
+  }
 
   void fillBodyFromFile(CRingItem* pItem, std::string fname)
   {
