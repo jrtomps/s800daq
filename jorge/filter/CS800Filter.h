@@ -245,6 +245,8 @@ class CS800Filter : public CFilter
 {
     private:
        bool m_isBuilt;
+       bool m_ulm24;
+       bool m_phillips24;
        std::map<uint16_t,std::vector<uint16_t> > m_sortedData;
        std::map<uint16_t,bool> m_found; // Map to keep track of tags found
        int m_eventCount;
