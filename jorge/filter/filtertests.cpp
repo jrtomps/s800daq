@@ -54,13 +54,13 @@ class S800FilterTest : public CppUnit::TestFixture
     uint8_t* pFiltBytes = reinterpret_cast<uint8_t*>(pFiltered->getItemPointer());
     size_t   nFilteredBytes = pFiltered->getBodySize() + sizeof(BodyHeader) + sizeof(RingItemHeader);
 
-//    cout << pFiltered->toString() << endl;
-//    cout << pResultItem->toString() << endl;
+    //    cout << pFiltered->toString() << endl;
+    //    cout << pResultItem->toString() << endl;
 
     size_t nToCompare = min(nExpectedBytes, nFilteredBytes);
     CPPUNIT_ASSERT_MESSAGE(
-  "Filter output must match that produced by old S800",
-  equal(pExpBytes, pExpBytes + nToCompare, pFiltBytes));
+        "Filter output must match that produced by old S800",
+        equal(pExpBytes, pExpBytes + nToCompare, pFiltBytes));
 
     delete pFiltered;
   }
@@ -68,37 +68,120 @@ class S800FilterTest : public CppUnit::TestFixture
   void parseCCUSB_0() {
     fillBodyFromFile(pItem, "parseCCUSB_0_in.dat");
     cout << pItem->toString() << endl;
-  
+
     EventType event;
     uint16_t* pBody = reinterpret_cast<uint16_t*>(pItem->getBodyPointer());
     int status = pFilter->parseData(pItem->getSourceId(),
-            pItem->getBodySize()/sizeof(uint16_t),
-            pItem->getEventTimestamp(),
-            pBody,
-            &event);
-      
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("ULM Trigger pattern",
-                    uint16_t(0x0010), event.trigger_pattern);
+        pItem->getBodySize()/sizeof(uint16_t),
+        pItem->getEventTimestamp(),
+        pBody,
+        &event);
 
-    uint16_t feras[] = {
-    0x8800, 0x0816, 0x7164, 0xfff7, 0x001c, 0x102d, 0x2027,
-    0x401f, 0x5035, 0x6031, 0x703e, 0x8019, 0x9025, 0xa029,
-    0xb036, 0xc032, 0xd030, 0xe027, 0xf035};
-    
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("ULM Trigger pattern",
+        uint16_t(0x0010), event.trigger_pattern);
+
+
+    // scintillator 0x4300
+    vector<uint16_t> feras(16,0);
+    feras[0] = 0x8800;
+    feras[1] = 0x0816;
+
     for (int i=0; i<16; i++) {
-       string msg = "FERA[" + to_string(i) + "]";
-       CPPUNIT_ASSERT_EQUAL_MESSAGE(
-                       msg.c_str(),
-                       feras[i], event.fera[i]);
+      string msg = "FERA[" + to_string(i) + "]";
+      CPPUNIT_ASSERT_EQUAL_MESSAGE(
+          msg.c_str(),
+          feras[i], event.fera[i]);
     }
 
+    // ion chamber 0x7164
+    vector<uint16_t> ionChamber7164 = {
+      0xfff7, 0x001c, 0x102d, 0x2027,
+      0x401f, 0x5035, 0x6031, 0x703e, 
+      0x8019, 0x9025, 0xa029, 0xb036, 
+      0xc032, 0xd030, 0xe027, 0xf035};
+
+    for (int i=0; i<17; i++) {
+      string msg = "IonChamber[" + to_string(i) + "]";
+      CPPUNIT_ASSERT_EQUAL_MESSAGE(
+          msg.c_str(),
+          ionChamber7164.at(i), 
+          event.phillips[0][i+1]);
+    }
+
+    // hodoscope pattern 0x4448
+    vector<uint16_t> hodoPattern(2, 0);
+    hodoPattern.at(0) = 0;
+    hodoPattern.at(1) = 0;
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Hodoscope hit pattern 0",
+                                 hodoPattern.at(0), 
+                                 event.coinc[0]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Hodoscope hit pattern 1",
+                                 hodoPattern.at(1), 
+                                 event.coinc[1]);
+
+    // hodo 0-15 0x7165
+    vector<uint16_t> hodo0(17, 0);
+    hodo0.at(0) = 0;  // both are empty
+    for (int i=0; i<17; i++) {
+      string msg = "Hodoscope[" + to_string(i) + "]";
+      CPPUNIT_ASSERT_EQUAL_MESSAGE(
+          msg.c_str(),
+          hodo0.at(i), 
+          event.phillips[1][i]);
+    }
+
+    // hodo 16-32 0x7166
+    vector<uint16_t> hodo1(17, 0);
+    hodo1.at(0) = 0; 
+    for (int i=0; i<16; i++) {
+      string msg = "Hodoscope[" + to_string(i+16) + "]";
+      CPPUNIT_ASSERT_EQUAL_MESSAGE(
+          msg.c_str(),
+          hodo1.at(i), 
+          event.phillips[2][i]);
+    }
+  
+   // s800 adc 0x7167
+   vector<uint16_t> s800Adc(17, 0);
+   s800Adc.at(0) = 0x0000;
+   for (int i=0; i<17; i++) {
+     string msg = "S800ADC[" + to_string(i) + "]";
+     CPPUNIT_ASSERT_EQUAL_MESSAGE(
+         msg.c_str(),
+         s800Adc.at(i), 
+         event.phillips[3][i]);
+   }
+
+   // s800 tdc 0x7186
+   vector<uint16_t> s800TDC(17, 0);
+   s800TDC.at(0) = 0x1800;
+   s800TDC.at(1) = 0xb5c9;
+   s800TDC.at(2) = 0xc4f2;
+   for (int i=0; i<17; i++) {
+     string msg = "s800TDC[" + to_string(i) + "]";
+     CPPUNIT_ASSERT_EQUAL_MESSAGE(
+         msg.c_str(),
+         s800TDC.at(i), 
+         event.phillips[4][i]);
+   }
+
+   // s800 labr tdc 0x7187
+   vector<uint16_t> laBr(17, 0);
+   laBr.at(0) = 0;
+   for (int i=0; i<17; i++) {
+     string msg = "laBr[" + to_string(i) + "]";
+     CPPUNIT_ASSERT_EQUAL_MESSAGE(
+         msg.c_str(),
+         laBr.at(i), 
+         event.phillips[5][i]);
+   }
   }
 
   void fillBodyFromFile(CRingItem* pItem, std::string fname)
   {
     uint8_t* pBody = reinterpret_cast<uint8_t*>(pItem->getItemPointer());    
     pBody += 2*sizeof(uint32_t);
-    
+
     uint32_t bodyHeaderSize = 20;
     pBody = copyIn(pBody, bodyHeaderSize);
 
@@ -111,13 +194,13 @@ class S800FilterTest : public CppUnit::TestFixture
 
     uint32_t id;
     file >> hex >> id;
-        cout << hex << id << dec << endl;
+    cout << hex << id << dec << endl;
 
     pBody = copyIn(pBody, id);
 
     uint32_t barrier;
     file >> hex >> barrier;
-        cout << hex << barrier << dec << endl;
+    cout << hex << barrier << dec << endl;
 
     pBody = copyIn(pBody, barrier);
 
