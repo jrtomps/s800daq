@@ -2,6 +2,7 @@
 # CCUSB DAQ config script
 
 set DAQROOT $::env(DAQROOT)
+lappend auto_path [file dirname [file normalize [info script]]]
 lappend auto_path [file join $DAQROOT TclLibs]
 lappend auto_path [file join $DAQROOT lib]
 
@@ -11,6 +12,8 @@ package require trigger2367
 package require lecroy4300b
 package require phillips71xx
 package require lecroy4448
+
+puts $auto_path
 
 marker create crateTag 0xC800
 marker create sclr4434Tag  0x4434
