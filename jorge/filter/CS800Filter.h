@@ -189,6 +189,8 @@ struct pad_type
   uint16_t sch;
   uint16_t d[4];
 
+  pad_type();
+
 };
 
 struct mesytec_header_type
@@ -199,12 +201,16 @@ struct mesytec_header_type
   uint16_t format;
   uint16_t adc_res;
   uint16_t nwords;
+
+  mesytec_header_type();
 };
 
 struct mesytec_ender_type
 {
   uint16_t esig;
   uint32_t tcts;
+
+  mesytec_ender_type();
 };
 
 struct mesytecTDC_type
@@ -213,6 +219,8 @@ struct mesytecTDC_type
   uint16_t data[32][200];
   uint16_t hits[32];
   struct mesytec_ender_type ender;
+
+  mesytecTDC_type();
 };
 
 
@@ -233,8 +241,8 @@ struct EventType
   uint16_t evnum_bit[2][NEVNUMWORDS]; // 0: event number from VM-USB, 1: event number from CC-USB
   uint64_t evnum;
 
-EventType() : trigger_pattern(0), evnum(0) {}
   
+  EventType();
 };
 
 
@@ -247,6 +255,7 @@ class CS800Filter : public CFilter
        bool m_isBuilt;
        bool m_ulm24;
        bool m_phillips24;
+       bool m_register24;
        std::map<uint16_t,std::vector<uint16_t> > m_sortedData;
        std::map<uint16_t,bool> m_found; // Map to keep track of tags found
        int m_eventCount;
@@ -265,7 +274,9 @@ class CS800Filter : public CFilter
        //virtual CRingItem* handleScalerItem(CRingScalerItem* item);
        
        void setBuiltFlag(bool isbuilt) { m_isBuilt = isbuilt; } 
-
+       void setULMIs24Bit(bool is24Bit) { m_ulm24 = is24Bit; }
+       void setPhillipsIs24Bit(bool is24Bit) { m_phillips24 = is24Bit; }
+       void setRegisterIs24Bit(bool is24Bit) { m_register24 = is24Bit; }
 
        virtual void finalize();
 

@@ -39,7 +39,8 @@ $(USERFILTER): $(OBJECTS)
 clean:
 	-rm -f *.o 
 
-unittests : TestRunner.o filtertests.o CS800Filter.o FragmentIndex.o
+unittests : TestRunner.o filtertests.o CS800Filter.o FragmentIndex.o \
+            RingItemFromFile.o
 	$(CXX) -I$(shell pwd) -o $@ $^ $(USERLDFLAGS) $(LDFLAGS) -lcppunit
 
 check : 

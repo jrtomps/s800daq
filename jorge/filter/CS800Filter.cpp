@@ -8,16 +8,72 @@
 #include <iomanip>
 #include <exception>
 #include <sstream>
+#include <algorithm>
 
 #include <FragmentIndex.h>
 
 
+pad_type::pad_type() 
+  : sch(0)
+{
+  std::fill(d, d+sizeof(d)/sizeof(uint16_t), 0);
+}
+
+mesytec_header_type::mesytec_header_type()
+: hsig(0), 
+  subheader(0),
+  module_id(0),
+  format(0), 
+  adc_res(0), 
+  nwords(0) 
+{}
+
+mesytec_ender_type::mesytec_ender_type()
+  : esig(0), 
+    tcts(0)
+{}
+
+mesytecTDC_type::mesytecTDC_type()
+: header(), ender()
+{
+  for (size_t i=0; i<32; ++i) {
+    std::fill(data[0],  data[0]+sizeof(data[0])/sizeof(uint16_t), 0);
+    hits[0] = 0;
+  }
+}
+
+EventType::EventType() 
+: trigger_pattern(0), 
+  mtdc(), 
+  evnum(0)
+{
+  std::fill(fera, fera+sizeof(fera)/sizeof(uint16_t), 0); 
+
+  for (size_t i=0; i<3; ++i) {
+    for (size_t j=0; j<MAXPADS; ++j) {
+      det_pads[i][j] = pad_type();
+    }
+  }
+
+  std::fill(npads,   npads+sizeof(npads)/sizeof(uint32_t), 0);
+  std::fill(tdc,     tdc+sizeof(tdc)/sizeof(uint16_t), 0);
+  std::fill(labrtdc, labrtdc+sizeof(labrtdc)/sizeof(uint16_t), 0);
+  std::fill(coinc,   coinc+sizeof(coinc)/sizeof(uint16_t), 0);
+
+  std::fill(timestamp_bit[0], timestamp_bit[0]+NTSWORDS, 0);
+  std::fill(timestamp_bit[1], timestamp_bit[1]+NTSWORDS, 0);
+  std::fill(timestamp,    timestamp+2, 0);
+  std::fill(evnum_bit[0], evnum_bit[0]+NEVNUMWORDS, 0);
+  std::fill(evnum_bit[1], evnum_bit[1]+NEVNUMWORDS, 0);
+
+}
 
 
 CS800Filter::CS800Filter(bool isbuilt) 
 : m_isBuilt(isbuilt), 
-  m_ulm24(0),
-  m_phillips24(0),
+  m_ulm24(false),
+  m_phillips24(true),
+  m_register24(true),
   m_sortedData(), 
   m_found(),
   m_eventCount(0),
@@ -30,6 +86,7 @@ CS800Filter::CS800Filter(const CS800Filter& rhs)
   m_isBuilt(rhs.m_isBuilt),
   m_ulm24(rhs.m_ulm24),
   m_phillips24(rhs.m_phillips24),
+  m_register24(rhs.m_register24),
   m_sortedData(rhs.m_sortedData),
   m_found(rhs.m_found),
   m_eventCount(rhs.m_eventCount),
@@ -43,6 +100,7 @@ CS800Filter& CS800Filter::operator=(const CS800Filter& rhs)
     m_isBuilt = rhs.m_isBuilt;
     m_ulm24 = rhs.m_ulm24,
     m_phillips24 = rhs.m_phillips24,
+    m_register24 = rhs.m_register24,
     m_sortedData = rhs.m_sortedData;
     m_found = rhs.m_found,
     m_eventCount = rhs.m_eventCount;
@@ -628,15 +686,19 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
 
 	  m_found[REGISTER_TAG] = true;
 
-	  //std::cout << "Decoding LeCroy coincidence register:"  << std::hex << subpacket << std::endl;
+//	  std::cout << "Decoding LeCroy coincidence register:"  << std::hex << subpacket << std::endl;
 
 	  pEvent->coinc[0] = *pData++; //Coincidence register for hodoscope 1-16
-	  pData++; //skip
-	  //std::cout << "Coincidence register 1-16:"  << std::hex << pEvent->coinc[0] << std::endl;
+	  if (m_register24) {
+		  pData++; //skip
+	  }
+//	  std::cout << "Coincidence register 1-16:"  << std::hex << pEvent->coinc[0] << std::endl;
 
 	  pEvent->coinc[1] = *pData++; //Coincidence register for hodoscope 17-31
-	  pData++; //skip
-	  //std::cout << "Coincidence register 17-31:"  << std::hex << pEvent->coinc[1] << std::endl;
+	  if (m_register24) {
+      pData++; //skip
+    }
+//	  std::cout << "Coincidence register 17-31:"  << std::hex << pEvent->coinc[1] << std::endl;
 
 	  wCounter+=4;
 
@@ -1083,10 +1145,10 @@ uint16_t*  CS800Filter::DecodePhillips(uint16_t* pPhillipsdata, EventType* pPhil
           pPhillipsdata++; // skip
         }
 
-        //std::cout << "Phillips ADC: :"  << std::hex << pPhillipsADC->phillips_adc[flag][i+1] << std::endl;
       }
 
     }
+
   }
  
   pPhillips = NULL;
