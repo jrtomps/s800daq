@@ -59,9 +59,6 @@ class S800FilterTest : public CppUnit::TestFixture
     uint8_t* pFiltBytes = reinterpret_cast<uint8_t*>(pFiltered->getItemPointer());
     size_t   nFilteredBytes = pFiltered->getBodySize() + sizeof(BodyHeader) + sizeof(RingItemHeader);
 
-    cout << pFiltered->toString() << endl;
-    cout << pResultItem->toString() << endl;
-
     size_t nToCompare = min(nExpectedBytes, nFilteredBytes);
     CPPUNIT_ASSERT_MESSAGE(
         "Filter output must match that produced by old S800",
@@ -74,7 +71,6 @@ class S800FilterTest : public CppUnit::TestFixture
   //
   void parseCCUSB_0() {
     Utility::fillBodyFromFile(pItem, "parseCCUSB_0_in.dat");
-    cout << pItem->toString() << endl;
 
     EventType event;
     uint16_t* pBody = reinterpret_cast<uint16_t*>(pItem->getBodyPointer());
@@ -150,6 +146,62 @@ class S800FilterTest : public CppUnit::TestFixture
   }
 
   void parseVMUSB_0() {
+    Utility::fillBodyFromFile(pItem, "parseVMUSB_0_in.dat");
+    cout << pItem->toString() << endl;
+
+    EventType event;
+    uint16_t* pBody = reinterpret_cast<uint16_t*>(pItem->getBodyPointer());
+    int status = pFilter->parseData(pItem->getSourceId(),
+                                    pItem->getBodySize()/sizeof(uint16_t),
+                                    pItem->getEventTimestamp(),
+                                    pBody,
+                                    &event);
+
+    
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "Number of CRDC1 pads",  
+                                  uint32_t(0), event.npads[0]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "Number of CRDC2 pads",  
+                                  uint32_t(0), event.npads[1]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "Number of PPAC pads",  
+                                  uint32_t(6), event.npads[2]);
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "PPAC #0 d[0]",
+        uint16_t(0x006d), event.det_pads[2][0].d[0]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "PPAC #0 d[1]",
+        uint16_t(0x0000), event.det_pads[2][0].d[1]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "PPAC #0 d[2]",
+        uint16_t(0x0000), event.det_pads[2][0].d[2]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "PPAC #0 d[3]",
+        uint16_t(0x026a), event.det_pads[2][0].d[3]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "PPAC #0 sch",
+        uint16_t(0x05ec), event.det_pads[2][0].sch);
+   
+    // no need to check every instance 
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "PPAC #2 d[5]",
+        uint16_t(0x0067), event.det_pads[2][2].d[0]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "PPAC #2 d[1]",
+        uint16_t(0x0000), event.det_pads[2][2].d[1]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "PPAC #2 d[2]",
+        uint16_t(0x0000), event.det_pads[2][2].d[2]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "PPAC #2 d[3]",
+        uint16_t(0x0000), event.det_pads[2][2].d[3]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "PPAC #2 sch",
+        uint16_t(0x066c), event.det_pads[2][2].sch);
+   
+    // no need to check every instance 
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "PPAC #5 d[5]",
+        uint16_t(0x0000), event.det_pads[2][5].d[0]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "PPAC #5 d[1]",
+        uint16_t(0x00b4), event.det_pads[2][5].d[1]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "PPAC #5 d[2]",
+        uint16_t(0x0000), event.det_pads[2][5].d[2]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "PPAC #5 d[3]",
+        uint16_t(0x0000), event.det_pads[2][5].d[3]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "PPAC #5 sch",
+        uint16_t(0x06fc), event.det_pads[2][5].sch);
+
   }
 
 
