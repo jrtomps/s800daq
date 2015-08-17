@@ -25,6 +25,7 @@ class S800FilterTest : public CppUnit::TestFixture
   CPPUNIT_TEST(test);
   CPPUNIT_TEST(parseCCUSB_0);
   CPPUNIT_TEST(parseVMUSB_0);
+  CPPUNIT_TEST(formatData_0);
   CPPUNIT_TEST_SUITE_END();
 
   private:
@@ -58,6 +59,8 @@ class S800FilterTest : public CppUnit::TestFixture
     size_t   nExpectedBytes = pResultItem->getBodySize() + sizeof(BodyHeader) + sizeof(RingItemHeader);
     uint8_t* pFiltBytes = reinterpret_cast<uint8_t*>(pFiltered->getItemPointer());
     size_t   nFilteredBytes = pFiltered->getBodySize() + sizeof(BodyHeader) + sizeof(RingItemHeader);
+    cout << "Expected " << pResultItem->toString() << endl;
+    cout << "Actual " << pFiltered->toString() << endl;
 
     size_t nToCompare = min(nExpectedBytes, nFilteredBytes);
     CPPUNIT_ASSERT_MESSAGE(
@@ -147,7 +150,6 @@ class S800FilterTest : public CppUnit::TestFixture
 
   void parseVMUSB_0() {
     Utility::fillBodyFromFile(pItem, "parseVMUSB_0_in.dat");
-    cout << pItem->toString() << endl;
 
     EventType event;
     uint16_t* pBody = reinterpret_cast<uint16_t*>(pItem->getBodyPointer());
@@ -204,6 +206,8 @@ class S800FilterTest : public CppUnit::TestFixture
 
   }
 
+  void formatData_0() {
+  }
 
   void comparePhillips(const uint16_t* actual, const std::vector<uint16_t>& expected, std::string context)
   {

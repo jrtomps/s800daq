@@ -49,11 +49,16 @@ EventType::EventType()
 {
   std::fill(fera, fera+sizeof(fera)/sizeof(uint16_t), 0); 
 
+  for (size_t i=0; i<6; ++i) {
+    std::fill(phillips[i], phillips[i]+17, 0);
+  }
+
   for (size_t i=0; i<3; ++i) {
     for (size_t j=0; j<MAXPADS; ++j) {
       det_pads[i][j] = pad_type();
     }
   }
+
 
   std::fill(npads,   npads+sizeof(npads)/sizeof(uint32_t), 0);
   std::fill(tdc,     tdc+sizeof(tdc)/sizeof(uint16_t), 0);
