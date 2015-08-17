@@ -83,8 +83,7 @@ class S800FilterTest : public CppUnit::TestFixture
 
     // scintillator 0x4300
     vector<uint16_t> feras(16,0);
-    feras[0] = 0x8800;
-    feras[1] = 0x0816;
+    feras[1] = 0x0016; 
 
     for (int i=0; i<16; i++) {
       string msg = "FERA[" + to_string(i) + "]";
@@ -95,17 +94,18 @@ class S800FilterTest : public CppUnit::TestFixture
 
     // ion chamber 0x7164
     vector<uint16_t> ionChamber7164 = {
-      0xfff7, 0x001c, 0x102d, 0x2027,
-      0x401f, 0x5035, 0x6031, 0x703e, 
-      0x8019, 0x9025, 0xa029, 0xb036, 
-      0xc032, 0xd030, 0xe027, 0xf035};
+      0xfff7, 0x001c, 0x002d, 0x0027,
+      0x0000, 0x001f, 0x0035, 0x0031, 
+      0x003e, 0x0019, 0x0025, 0x0029, 
+      0x0036, 0x0032, 0x0030, 0x0027, 
+      0x0035};
 
     for (int i=0; i<17; i++) {
       string msg = "IonChamber[" + to_string(i) + "]";
       CPPUNIT_ASSERT_EQUAL_MESSAGE(
           msg.c_str(),
           ionChamber7164.at(i), 
-          event.phillips[0][i+1]);
+          event.phillips[0][i]);
     }
 
     // hodoscope pattern 0x4448

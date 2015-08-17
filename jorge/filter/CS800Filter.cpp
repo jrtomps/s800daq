@@ -1075,13 +1075,15 @@ uint16_t*  CS800Filter::DecodePhillips(uint16_t* pPhillipsdata, EventType* pPhil
     for (i=0; i<16; i++) {
 
       if ( (pPhillips->phillips[flag][0] >> i) & 0x1 ) {
-	pPhillips->phillips[flag][i+1] = *pPhillipsdata++ & 0xfff; // Value: bits 0 to 11
+        uint16_t value = *pPhillipsdata++; 
+        uint16_t channel = (value >> 12) & 0xf;
+        pPhillips->phillips[flag][channel+1] = value & 0xfff; // Value: bits 0 to 11
 
-	if (m_phillips24) { // If using Phillips in 24-bit format
-	  pPhillipsdata++; // skip
-	}
+        if (m_phillips24) { // If using Phillips in 24-bit format
+          pPhillipsdata++; // skip
+        }
 
-	//std::cout << "Phillips ADC: :"  << std::hex << pPhillipsADC->phillips_adc[flag][i+1] << std::endl;
+        //std::cout << "Phillips ADC: :"  << std::hex << pPhillipsADC->phillips_adc[flag][i+1] << std::endl;
       }
 
     }
