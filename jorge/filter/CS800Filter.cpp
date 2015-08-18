@@ -1198,7 +1198,7 @@ void CS800Filter::FormatData(int status, EventType* pEvent)
   /****S800_TRIGGER_PACKET****/
   m_sortedData[PACKET_TRIGGER].push_back(pEvent->trigger_pattern); // Trigger pattern
 
-  for (i=S800_TOF_FIRST; i<S800_TOF_FIRST+S800_TOF_CHANNELS; i++) { // Loop over TDC trigger channels
+  for (i=S800_TRIGGER_FIRST; i<S800_TRIGGER_FIRST+S800_TRIGGER_CHANNELS; i++) { // Loop over TDC trigger channels
 
     time = pEvent->phillips[4][i+1];
 
