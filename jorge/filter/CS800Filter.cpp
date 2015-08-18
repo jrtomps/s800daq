@@ -175,10 +175,10 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
       
       if ( item_h->hasBodyHeader() ) { 
 	
-	uint32_t id = item_h->getSourceId(); // Fragment Source ID
-	uint64_t tstamp = item_h->getEventTimestamp(); // Fragment timestamp
-	size_t size = item_h->getStorageSize()/sizeof(uint16_t); // Fragment payload size (ring item header + body header + body)
-	size_t bsize = item_h->getBodySize()/sizeof(uint16_t); // Fragment body size (just body)
+        uint32_t id = item_h->getSourceId(); // Fragment Source ID
+        uint64_t tstamp = item_h->getEventTimestamp(); // Fragment timestamp
+        size_t size = item_h->getStorageSize()/sizeof(uint16_t); // Fragment payload size (ring item header + body header + body)
+        size_t bsize = item_h->getBodySize()/sizeof(uint16_t); // Fragment body size (just body)
 	
 
 	/* Check for repeated source IDs**************************************/ 
@@ -292,7 +292,7 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
   FormatData(status, event); // Format and pack data
 
 
-  publish = new CPhysicsEventItem(maxBody); // Create new ring item 
+  publish = new CPhysicsEventItem(event->timestamp[0], 2, 0, maxBody); // Create new ring item 
   PublishData(publish); // Publish new ring item
 
 
@@ -1358,7 +1358,6 @@ void CS800Filter::FormatData(int status, EventType* pEvent)
   std::vector<uint16_t>::const_iterator it, itend;
 
 
-  ic_energy.clear(), crdc_raw.clear(), crdc_anode.clear(), ppac_raw.clear();
   m_sortedData.clear();
 
 
@@ -1434,7 +1433,7 @@ void CS800Filter::FormatData(int status, EventType* pEvent)
       ic_energy.push_back(energy); // Fill IC energy sub-packet with  data
     }
   }
-  size_subpacket_ic_energy = ic_energy.size();
+  size_subpacket_ic_energy = ic_energy.size()+1;
 
   m_sortedData[PACKET_FP_IC].push_back(size_subpacket_ic_energy); // Define IC packet and fill it with sub-packet size 
   it = ic_energy.begin(); 
@@ -1478,7 +1477,7 @@ void CS800Filter::FormatData(int status, EventType* pEvent)
 	crdc_raw.push_back(pEvent->det_pads[i][j].d[3]);
       }	  
     }
-    size_subpacket_crdc_raw = crdc_raw.size();
+    size_subpacket_crdc_raw = crdc_raw.size() + 1;
     
     
     crdc_anode.push_back(SUBPACKET_FP_CRDC_ANODE); // Define CRDC Anode sub-packet and fill it with subpacket tag
@@ -1497,7 +1496,7 @@ void CS800Filter::FormatData(int status, EventType* pEvent)
       crdc_anode.push_back(energy & 0xFFF);
       crdc_anode.push_back(time & 0xFFF);
     }
-    size_subpacket_crdc_anode = crdc_anode.size();
+    size_subpacket_crdc_anode = crdc_anode.size() + 1;
     
     
     m_sortedData[TEMP_PACKET_CRDC].push_back(label); // Define CRDC packet and include CRDC identifying tag
@@ -1539,14 +1538,14 @@ void CS800Filter::FormatData(int status, EventType* pEvent)
   }
 
   label = 1; // Second hodoscope set
-  m_sortedData[PACKET_FP_HODO1].push_back(label); 
+  m_sortedData[PACKET_FP_HODO3].push_back(label); 
   for (i = S800_FP_HODO_FIRST; i < S800_FP_HODO_FIRST + S800_FP_HODO_CHANNELS; i++) {
     
     energy = pEvent->phillips[2][i+1]; // Energies of second set of hodoscopes
     
     if (energy) {
       energy |= i<<12;
-      m_sortedData[PACKET_FP_HODO1].push_back(energy); 
+      m_sortedData[PACKET_FP_HODO3].push_back(energy); 
       energy = 0;
     }
   }
@@ -1590,7 +1589,7 @@ void CS800Filter::FormatData(int status, EventType* pEvent)
       ppac_raw.push_back(pEvent->det_pads[2][j].d[3]);
     }	  
   }
-  size_subpacket_ppac_raw = ppac_raw.size();
+  size_subpacket_ppac_raw = ppac_raw.size() + 1;
     
   m_sortedData[PACKET_II_TRACK].push_back(size_subpacket_ppac_raw); // Define PPAC packet and include sub-packet RAW size 
   it = ppac_raw.begin(); 
@@ -1604,6 +1603,7 @@ void CS800Filter::FormatData(int status, EventType* pEvent)
 
 
   /****S800_OB_PIN_PACKET****/
+  m_sortedData.insert( make_pair( PACKET_OB_PIN, std::vector<uint16_t>() ) );
   energy = pEvent->phillips[3][S800_OB_PIN+1]; // PIN energy from generic S800 Phillips ADC 
   if (energy > 0) { 
     energy |= S800_OB_PIN <<12;
@@ -1613,6 +1613,7 @@ void CS800Filter::FormatData(int status, EventType* pEvent)
 
 
   /****S800_GALOTTE_PACKET****/
+  m_sortedData.insert( make_pair( PACKET_GALOTTE, std::vector<uint16_t>() ) );
   for (i = S800_GALOTTE_FIRST; i < S800_GALOTTE_FIRST + S800_GALOTTE_CHANNELS; i++) {
 
     time = pEvent->phillips[3][i+1]; // Galotte TAC from generic S800 Phillips ADC
@@ -1626,6 +1627,7 @@ void CS800Filter::FormatData(int status, EventType* pEvent)
 
 
   /****S800_LABR_PACKET****/
+  m_sortedData.insert( make_pair( PACKET_LABR, std::vector<uint16_t>() ) );
   for (i = S800_LABR_FIRST; i < S800_LABR_CHANNELS; i++) {
 
     energy = pEvent->fera[i+4];
@@ -1685,6 +1687,7 @@ void CS800Filter::PublishData(CRingItem* item)
   pData = appendKeyedData(pData,PACKET_CRDC,PACKET_CRDC1); //Overwrite tag
   pData = appendKeyedData(pData,PACKET_CRDC,PACKET_CRDC2); //Overwrite tag
   pData = appendKeyedData(pData,PACKET_FP_HODO,PACKET_FP_HODO1); //Overwrite tag
+  pData = appendKeyedData(pData,PACKET_FP_HODO,PACKET_FP_HODO3); //Overwrite tag
   pData = appendKeyedData(pData,PACKET_FP_HODO,PACKET_FP_HODO2); //Overwrite tag
   pData = appendKeyedData(pData,label,PACKET_II_TRACK);
   pData = appendKeyedData(pData,label,PACKET_OB_PIN);
