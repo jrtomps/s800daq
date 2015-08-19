@@ -1,4 +1,4 @@
-INSTDIR=/usr/opt/nscldaq/11.0-005
+INSTDIR=/usr/opt/nscldaq/11.0-007
 
 include $(INSTDIR)/filterkit/FilterIncludes
 
@@ -8,7 +8,7 @@ include $(INSTDIR)/filterkit/FilterIncludes
 #
 #  Add your own compilation/link flags here:
 
-USERCXXFLAGS=-std=c++11
+USERCXXFLAGS=-std=c++11 -O2
 USERCCFLAGS=$(USERCCFLAGS)
 USERLDFLAGS= -Wl,-rpath=$(INSTDIR)/lib
 

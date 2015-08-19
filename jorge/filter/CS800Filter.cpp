@@ -214,10 +214,10 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 	}
 	
 	
-	std::cout << "\nINFO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-	std::cout << "ID: " << std::dec << id << std::endl;
-	std::cout << "Size total: " << std::dec << size << ", body: " << bsize << std::endl;
-	std::cout << "Timestamp: " << std::dec << tstamp << std::endl;
+	//std::cout << "\nINFO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+	//std::cout << "ID: " << std::dec << id << std::endl;
+	//std::cout << "Size total: " << std::dec << size << ", body: " << bsize << std::endl;
+	//std::cout << "Timestamp: " << std::dec << tstamp << std::endl;
 	
 	m_found[XLM_TIMESTAMP_TAG] = false;
 	m_found[XLM_CRDC1_TAG] = false;
@@ -232,7 +232,7 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 	m_found[PHILLIPS_ADC_HODOSCOPE2_TAG] = false;
 	m_found[PHILLIPS_ADC_S800_TAG] = false;
 	m_found[PHILLIPS_TDC_S800_TAG] = false;
-	m_found[PHILLIPS_TDC_LABR_TAG] = false;
+	//m_found[PHILLIPS_TDC_LABR_TAG] = false;
 	
 
 	pBody = it->s_itembody; // Define pointer to data body 
@@ -430,18 +430,17 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
     }
 
 
+       std::map<uint16_t,uint16_t> m_error;
 
 
     /* SEARCH FOR SUBPACKET TAGS *****************************************************************/
 
-    while(wCounter != nWords) {
+    while(wCounter < nWords) {
       
       subpacket = *pData++; // Read sub-packet tag
       wCounter++;
       
-      //std::cout << "-------- " << std::endl;
-      if ( (bsize > 44) && (bsize < 80) ) std::cout << "Subpacket tag: "  << std::hex << subpacket << ". Counted words: " << std::dec << wCounter << std::endl;
-   
+
       switch(subpacket) {
 	
 
@@ -662,7 +661,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
 
 	  pEvent->trigger_pattern = *pData++; // Read trigger pattern (bits 0 to 15 from 24-bit word)
 	  if (m_ulm24) {
-      pData++; // Skip bits 16 to 23 for now
+	    pData++; // Skip bits 16 to 23 for now
 	  }
 
 	  wCounter+=2; 
@@ -789,26 +788,26 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
 
       case REGISTER_TAG: // REGISTER ADC ////////////////////////////////////////////////////////////////////
 
-       if (!m_found[REGISTER_TAG]) { 
-
+	if (!m_found[REGISTER_TAG]) { 
+	  
 	  m_found[REGISTER_TAG] = true;
-
-//	  std::cout << "Decoding LeCroy coincidence register:"  << std::hex << subpacket << std::endl;
-
+	  
+	  //std::cout << "Decoding LeCroy coincidence register:"  << std::hex << subpacket << std::endl;
+	  
 	  pEvent->coinc[0] = *pData++; //Coincidence register for hodoscope 1-16
 	  if (m_register24) {
-		  pData++; //skip
+	    pData++; //skip
 	  }
-//	  std::cout << "Coincidence register 1-16:"  << std::hex << pEvent->coinc[0] << std::endl;
+	  //	  std::cout << "Coincidence register 1-16:"  << std::hex << pEvent->coinc[0] << std::endl;
 
 	  pEvent->coinc[1] = *pData++; //Coincidence register for hodoscope 17-31
 	  if (m_register24) {
-      pData++; //skip
-    }
-//	  std::cout << "Coincidence register 17-31:"  << std::hex << pEvent->coinc[1] << std::endl;
-
+	    pData++; //skip
+	  }
+	  //	  std::cout << "Coincidence register 17-31:"  << std::hex << pEvent->coinc[1] << std::endl;
+	  
 	  wCounter+=4;
-
+	  
 	} else {
 	  std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
 	  m_error[8] += 1;
@@ -1291,12 +1290,12 @@ uint16_t*  CS800Filter::DecodeFERAADC(uint16_t* pFERAdata, EventType* pFERA, int
   uint16_t wc,chan;
 
   wc = (*pFERAdata++ & 0x7800) >> 11; // Number of words: bits 11 to 14 (from bit 0)
-  std::cout << "FERA ADC: wc:"  << std::hex << wc << std::endl;
+  //std::cout << "FERA ADC: wc:"  << std::hex << wc << std::endl;
   if (wc > 0) {
     for (i=0; i < wc; i++) {
       chan = (*pFERAdata & 0x7800) >> 11; // Channel number
       pFERA->fera[chan] = *pFERAdata++ & 0x7ff; // ADC value: bits 0 to 10
-      std::cout << "FERA ADC: :"  << std::hex << pFERA->fera[chan] << std::endl;
+      //std::cout << "FERA ADC: :"  << std::hex << pFERA->fera[chan] << std::endl;
     }
   }
   
@@ -1788,3 +1787,61 @@ void CS800Filter::finalize()
   std::cout << "----------------------------------------" << std::endl;
 }
 
+
+
+
+CRingItem* CS800Filter::handleScalerItem(CRingScalerItem* item) {
+  
+  ++m_eventCount;
+  
+  int i;
+  int offset = 1;
+
+  CRingScalerItem* product;
+
+  std::vector<uint32_t> sclrs = item->getScalers();
+  std::vector<uint32_t> newSclrs(sclrs.begin()+offset, sclrs.end());
+
+
+
+  // Mask out the upper bits [31:24]
+  // This gets rid of the QX code inserted by
+  // the CC-USB
+  uint32_t mask = 0x00ffffff;
+  uint32_t nsclr = sclrs.size();
+
+  uint32_t tag1 = (sclrs[0] & 0xffff0000)>>16;
+  uint32_t tag2 = (sclrs[0] & 0xffff);
+
+  if (tag1 == VMUSB_SCALER_TAG) {
+    return NULL;
+  }
+
+  else if (tag1 == CCUSB_SCALER_TAG) {
+
+    for (i=0; i<nsclr-offset; ++i) {
+      newSclrs[i] &= mask;
+    }
+    if ( item->hasBodyHeader() ) {
+	    product = new CRingScalerItem(item->getEventTimestamp(), 
+                            item->getSourceId(), item->getBarrierType(), 
+                            item->getStartTime(), item->getEndTime(),
+			    item->getTimestamp(), newSclrs,
+			    item->getTimeDivisor(), item->isIncremental()
+			    );
+    } else {
+	    product = new CRingScalerItem(item->getStartTime(), item->getEndTime(),
+			    item->getTimestamp(), newSclrs,
+			    item->isIncremental(), item->getTimeDivisor()
+			    );
+    }
+
+  } else {
+    return NULL;
+  }
+
+
+  product->updateSize();
+
+  return product;
+}
