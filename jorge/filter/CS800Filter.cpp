@@ -47,30 +47,30 @@ EventType::EventType()
   mtdc(), 
   evnum(0)
 {
-//  std::fill(fera, fera+sizeof(fera)/sizeof(uint16_t), 0); 
-//
-//  for (size_t i=0; i<6; ++i) {
-//    std::fill(phillips[i], phillips[i]+17, 0);
-//  }
-//
-//  for (size_t i=0; i<3; ++i) {
-//    for (size_t j=0; j<MAXPADS; ++j) {
-//      det_pads[i][j] = pad_type();
-//    }
-//  }
-//
-//
-//  std::fill(npads,   npads+sizeof(npads)/sizeof(uint32_t), 0);
-//  std::fill(tdc,     tdc+sizeof(tdc)/sizeof(uint16_t), 0);
-//  std::fill(labrtdc, labrtdc+sizeof(labrtdc)/sizeof(uint16_t), 0);
-//  std::fill(coinc,   coinc+sizeof(coinc)/sizeof(uint16_t), 0);
-//
-//  std::fill(timestamp_bit[0], timestamp_bit[0]+NTSWORDS, 0);
-//  std::fill(timestamp_bit[1], timestamp_bit[1]+NTSWORDS, 0);
-//  std::fill(timestamp,    timestamp+2, 0);
-//  std::fill(evnum_bit[0], evnum_bit[0]+NEVNUMWORDS, 0);
-//  std::fill(evnum_bit[1], evnum_bit[1]+NEVNUMWORDS, 0);
-//
+  std::fill(fera, fera+sizeof(fera)/sizeof(uint16_t), 0); 
+
+  for (size_t i=0; i<6; ++i) {
+    std::fill(phillips[i], phillips[i]+17, 0);
+  }
+
+  for (size_t i=0; i<3; ++i) {
+    for (size_t j=0; j<MAXPADS; ++j) {
+      det_pads[i][j] = pad_type();
+    }
+  }
+
+
+  std::fill(npads,   npads+sizeof(npads)/sizeof(uint32_t), 0);
+  std::fill(tdc,     tdc+sizeof(tdc)/sizeof(uint16_t), 0);
+  std::fill(labrtdc, labrtdc+sizeof(labrtdc)/sizeof(uint16_t), 0);
+  std::fill(coinc,   coinc+sizeof(coinc)/sizeof(uint16_t), 0);
+
+  std::fill(timestamp_bit[0], timestamp_bit[0]+NTSWORDS, 0);
+  std::fill(timestamp_bit[1], timestamp_bit[1]+NTSWORDS, 0);
+  std::fill(timestamp,    timestamp+2, 0);
+  std::fill(evnum_bit[0], evnum_bit[0]+NEVNUMWORDS, 0);
+  std::fill(evnum_bit[1], evnum_bit[1]+NEVNUMWORDS, 0);
+
 }
 
 

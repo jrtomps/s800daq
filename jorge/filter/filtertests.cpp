@@ -60,8 +60,6 @@ class S800FilterTest : public CppUnit::TestFixture
     size_t   nExpectedBytes = pResultItem->getBodySize() + sizeof(BodyHeader) + sizeof(RingItemHeader);
     uint8_t* pFiltBytes = reinterpret_cast<uint8_t*>(pFiltered->getItemPointer());
     size_t   nFilteredBytes = pFiltered->getBodySize() + sizeof(BodyHeader) + sizeof(RingItemHeader);
-    cout << "Expected " << pResultItem->toString() << endl;
-    cout << "Actual " << pFiltered->toString() << endl;
 
     size_t nToCompare = min(nExpectedBytes, nFilteredBytes);
     CPPUNIT_ASSERT_MESSAGE(
@@ -81,8 +79,10 @@ class S800FilterTest : public CppUnit::TestFixture
     size_t   nExpectedBytes = pResultItem->getBodySize() + sizeof(BodyHeader) + sizeof(RingItemHeader);
     uint8_t* pFiltBytes = reinterpret_cast<uint8_t*>(pFiltered->getItemPointer());
     size_t   nFilteredBytes = pFiltered->getBodySize() + sizeof(BodyHeader) + sizeof(RingItemHeader);
-    cout << "Expected " << pResultItem->toString() << endl;
-    cout << "Actual " << pFiltered->toString() << endl;
+    cout << "Expected" << endl;
+    cout << pResultItem->toString() << endl;
+    cout << "Actual" << endl;
+    cout << pFiltered->toString() << endl;
 
     size_t nToCompare = min(nExpectedBytes, nFilteredBytes);
     CPPUNIT_ASSERT_MESSAGE(

@@ -8,7 +8,7 @@ include $(INSTDIR)/filterkit/FilterIncludes
 #
 #  Add your own compilation/link flags here:
 
-USERCXXFLAGS=-std=c++11
+USERCXXFLAGS=-std=c++11 -O2
 USERCCFLAGS=$(USERCCFLAGS)
 USERLDFLAGS= -Wl,-rpath=$(INSTDIR)/lib
 

@@ -43,7 +43,8 @@ namespace eval ActionFilter {
 #    set cmd [file join /home tompkins actions slave filter UserFilter]
     set cmd [file join /user s800 converged_daq jorge filter UserFilter]
 #    set pipe [open "| $cmd  --source=tcp://localhost/tompkins --sink=file:///dev/null --oneshot |& cat" r]
-    set pipe [open "| $cmd  --source=file:///user/s800/stagearea/experiment/run1017/run-1017-00.evt --sink=tcp://localhost/s800filter |& cat" r]
+#    set pipe [open "| $cmd  --source=file:///user/s800/stagearea/experiment/run1017/run-1017-00.evt --sink=tcp://localhost/s800filter |& cat" r]
+    set pipe [open "| $cmd  --source=file:///user/s800/stagearea/commission/run150/run-0150-00.evt --sink=tcp://localhost/s800filter |& cat" r]
     chan configure $pipe -blocking 0
     chan configure $pipe -buffering line
     chan event $pipe readable [list $parser onReadable $pipe]
