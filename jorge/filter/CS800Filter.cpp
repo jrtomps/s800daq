@@ -9,15 +9,12 @@
 #include <exception>
 #include <sstream>
 #include <algorithm>
+#include <cstdlib>
+#include <cstring>
 
 #include <FragmentIndex.h>
 
 
-  pad_type::pad_type() 
-: sch(0)
-{
-  std::fill(d, d+sizeof(d)/sizeof(uint16_t), 0);
-}
 
   mesytec_header_type::mesytec_header_type()
 : hsig(0), 
@@ -37,8 +34,8 @@
 : header(), ender()
 {
   for (size_t i=0; i<32; ++i) {
-    std::fill(data[0],  data[0]+sizeof(data[0])/sizeof(uint16_t), 0);
-    hits[0] = 0;
+//    std::fill(data[i],  data[i]+sizeof(data[i])/sizeof(uint16_t), 0);
+    hits[i] = 0;
   }
 }
 
@@ -134,7 +131,7 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 
   uint16_t* pBody = nullptr; // pBody will point to fragment body
 
-  EventType* event = nullptr; // event will point to EventType structure (defined in header)
+//  EventType* event = nullptr; // event will point to EventType structure (defined in header)
 
   CRingItem* publish = nullptr; //publish will point to the final formatted data to be published
 
@@ -151,8 +148,10 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 
 
 
-  event = new EventType(); //event will collect data from modules
+//  event = new EventType(); //event will collect data from modules
+  EventType event; //event will collect data from modules
 
+  
 
 
   if (NF == 2) { // Number of fragments in Item MUST BE 2 (VM-USB and CC-USB)
@@ -231,7 +230,7 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 	
 
 	pBody = it->s_itembody; // Define pointer to data body 
-	status = parseData(id,bsize,tstamp,pBody,event);
+	status = parseData(id,bsize,tstamp,pBody,&event);
 	if (status != 0) goodstatus = false;
 
       } else {
@@ -284,16 +283,16 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 
 
 
-  FormatData(status, event); // Format and pack data
+  FormatData(status, &event); // Format and pack data
 
 
-  publish = new CPhysicsEventItem(event->timestamp[0], 2, 0, maxBody); // Create new ring item 
+  publish = new CPhysicsEventItem(event.timestamp[0], 2, 0, maxBody); // Create new ring item 
   PublishData(publish); // Publish new ring item
 
 
 
 
-  delete event;
+//  delete event;
 
   return publish;
 }
@@ -1243,12 +1242,13 @@ uint16_t*  CS800Filter::DecodeMTDC(uint16_t* pMTDCdata, EventType* pMTDC, int st
   pMTDC->mtdc.header.module_id = temp16 & 0xFF; 
 
   if (pMTDC->mtdc.header.nwords-1 > 32) {
-    std::cerr << "*** ERROR: too many channels seen for mesytec TDC !!!! "  << std::dec << pMTDC->mtdc.header.nwords << std::endl;
+    std::cerr << "*** ERROR: too many channels seen for mesytec TDC !!!! "  
+              << std::dec << pMTDC->mtdc.header.nwords << std::endl;
     status = 1;
     return pMTDCdata;
   }
 
-  for (i=0; i < 32; i++) pMTDC->mtdc.hits[i] = 0; // Init hit counts to zero
+//  for (i=0; i < 32; i++) pMTDC->mtdc.hits[i] = 0; // Init hit counts to zero
 
   for (i=0; i < pMTDC->mtdc.header.nwords-1; i++) {
     temp16 = *pMTDCdata++;
@@ -1638,6 +1638,7 @@ void CS800Filter::FormatData(int status, EventType* pEvent)
   /****S800_VME_TDC_PACKET****/
   for (i = 0; i < 32; i++) {
     for (j = 0; j < pEvent->mtdc.hits[i]; j++) {
+      std::cout << "hit[" << i << "] = " << pEvent->mtdc.hits[i] << std::endl;
       if (pEvent->mtdc.data[i][j] > 0) {
         m_sortedData[PACKET_MTDC].push_back((j<<8) + i); // hit number is coded in first 8 bits
         m_sortedData[PACKET_MTDC].push_back(pEvent->mtdc.data[i][j]); // This is 16 bit data
