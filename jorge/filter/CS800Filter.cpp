@@ -1053,6 +1053,8 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
 	std::cerr << "*** ERROR: Unknown word in fragment body!!!!!!!! "  << std::hex << subpacket << std::endl;
 	m_error[11] += 1;
 	status = 1;
+        std::cout << "Word count = " << std::dec << wCounter << " nWords=" << nWords << std::endl;
+
 	return status;
         //break;
 

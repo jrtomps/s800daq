@@ -22,7 +22,8 @@ using namespace std;
 class S800FilterTest : public CppUnit::TestFixture 
 {
   CPPUNIT_TEST_SUITE(S800FilterTest);
-  CPPUNIT_TEST(test);
+  CPPUNIT_TEST(test_0);
+  CPPUNIT_TEST(test_1);
   CPPUNIT_TEST(parseCCUSB_0);
   CPPUNIT_TEST(parseVMUSB_0);
   CPPUNIT_TEST(formatData_0);
@@ -49,7 +50,7 @@ class S800FilterTest : public CppUnit::TestFixture
   }
 
   //
-  void test() {
+  void test_0() {
     Utility::fillBodyFromFile(pItem, "test_0_in.dat");
     Utility::fillBodyFromFile(pResultItem, "test_0_out.dat");
 
@@ -59,8 +60,29 @@ class S800FilterTest : public CppUnit::TestFixture
     size_t   nExpectedBytes = pResultItem->getBodySize() + sizeof(BodyHeader) + sizeof(RingItemHeader);
     uint8_t* pFiltBytes = reinterpret_cast<uint8_t*>(pFiltered->getItemPointer());
     size_t   nFilteredBytes = pFiltered->getBodySize() + sizeof(BodyHeader) + sizeof(RingItemHeader);
-    cout << "Expected " << pResultItem->toString() << endl;
-    cout << "Actual " << pFiltered->toString() << endl;
+
+    size_t nToCompare = min(nExpectedBytes, nFilteredBytes);
+    CPPUNIT_ASSERT_MESSAGE(
+        "Filter output must match that produced by old S800",
+        equal(pExpBytes, pExpBytes + nToCompare, pFiltBytes));
+
+    delete pFiltered;
+  }
+
+  void test_1() {
+    Utility::fillBodyFromFile(pItem, "test_1_in.dat");
+    Utility::fillBodyFromFile(pResultItem, "test_1_out.dat");
+
+    CRingItem* pFiltered = pFilter->handlePhysicsEventItem(pItem);
+
+    uint8_t* pExpBytes = reinterpret_cast<uint8_t*>(pResultItem->getItemPointer());
+    size_t   nExpectedBytes = pResultItem->getBodySize() + sizeof(BodyHeader) + sizeof(RingItemHeader);
+    uint8_t* pFiltBytes = reinterpret_cast<uint8_t*>(pFiltered->getItemPointer());
+    size_t   nFilteredBytes = pFiltered->getBodySize() + sizeof(BodyHeader) + sizeof(RingItemHeader);
+    cout << "Expected" << endl;
+    cout << pResultItem->toString() << endl;
+    cout << "Actual" << endl;
+    cout << pFiltered->toString() << endl;
 
     size_t nToCompare = min(nExpectedBytes, nFilteredBytes);
     CPPUNIT_ASSERT_MESSAGE(
