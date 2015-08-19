@@ -128,7 +128,9 @@
 #define PHILLIPS_TDC_LABR_TAG 0x7187
 #define PHILLIPS_TDC_LABR_ETAG 0xF187
 
-
+#define VMUSB_SCALER_TAG 0x1234
+ 
+#define CCUSB_SCALER_TAG 0x4434
 
 
 
@@ -272,7 +274,7 @@ class CS800Filter : public CFilter
        virtual CFilter* clone() const { return new CS800Filter(*this); }
     
        virtual CRingItem* handlePhysicsEventItem(CPhysicsEventItem* item);
-       //virtual CRingItem* handleScalerItem(CRingScalerItem* item);
+       virtual CRingItem* handleScalerItem(CRingScalerItem* item);
        
        void setBuiltFlag(bool isbuilt) { m_isBuilt = isbuilt; } 
        void setULMIs24Bit(bool is24Bit) { m_ulm24 = is24Bit; }

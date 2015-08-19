@@ -1,4 +1,4 @@
-INSTDIR=/usr/opt/nscldaq/11.0-005
+INSTDIR=/usr/opt/nscldaq/11.0-007
 
 include $(INSTDIR)/filterkit/FilterIncludes
 

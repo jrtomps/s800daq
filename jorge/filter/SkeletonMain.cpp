@@ -57,10 +57,9 @@ int main(int argc, char* argv[])
 //    CDuplicateFilter dupFilter;
 //    CCaesarFilter CaesarFilter(0);
     CS800Filter S800Filter(1);
-    S800Filter.setULMIs24Bit(false);
-    S800Filter.setPhillipsIs24Bit(false);
-    S800Filter.setRegisterIs24Bit(false);
-
+    S800Filter.setULMIs24Bit(true);
+    //S800Filter.setPhillipsIs24Bit(false);
+    //S800Filter.setRegisterIs24Bit(false);
     // Register the filter(s) here. Note that if more than
     // one filter will be registered, the order of registration
     // will define the order of execution. If multiple filters are

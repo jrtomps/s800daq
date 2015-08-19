@@ -176,64 +176,63 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
         size_t size = item_h->getStorageSize()/sizeof(uint16_t); // Fragment payload size (ring item header + body header + body)
         size_t bsize = item_h->getBodySize()/sizeof(uint16_t); // Fragment body size (just body)
 
-
-        /* Check for repeated source IDs**************************************/ 
-        j = i-1;
-        while(j>=0) {
-          if (id == sid[j]) {
-            //std::cerr << "*** ERROR: Different fragments have same source ID!!!!!!!" << std::endl;
-            m_error[3] += 1; // Repeated source ID
-            break;
-          }
-          j--;
-        }
-        sid[i] = id;
-        i++;
-
+	/* Check for repeated source IDs**************************************/ 
+	j = i-1;
+	while(j>=0) {
+	  if (id == sid[j]) {
+	    //std::cerr << "*** ERROR: Different fragments have same source ID!!!!!!!" << std::endl;
+	    m_error[3] += 1; // Repeated source ID
+	    break;
+	  }
+	  j--;
+	}
+	sid[i] = id;
+	i++;
 
 
-        /* Check timestamps *************************************************/ 
-        if (tstamp == 0) {
 
-          //std::cerr << "*** ERROR: Timestamp = 0 !!!!!!!" << std::endl;
-          m_error[4] += 1; // Corrupted timestamp = 0 
-          //break;
+	/* Check timestamps *************************************************/ 
+	if (tstamp == 0) {
+	  
+	  //std::cerr << "*** ERROR: Timestamp = 0 !!!!!!!" << std::endl;
+	  m_error[4] += 1; // Corrupted timestamp = 0 
+	  //break;
+	  
+	} else if (tstamp < earliest) {
+	  
+	  earliest = tstamp;
+	} else if (tstamp > earliest + WINDOW) {
+	  
+	  //std::cerr << "*** ERROR: Uncorrelated fragments (different timestamps) !!!!!!!" << std::endl;
+	  m_error[5] += 1; // Uncorrelated fragments (different timestamps) 
+	  //break;
+	}
+	
+	
+	//std::cout << "\nINFO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+	//std::cout << "ID: " << std::dec << id << std::endl;
+	//std::cout << "Size total: " << std::dec << size << ", body: " << bsize << std::endl;
+	//std::cout << "Timestamp: " << std::dec << tstamp << std::endl;
+	
+	m_found[XLM_TIMESTAMP_TAG] = false;
+	m_found[XLM_CRDC1_TAG] = false;
+	m_found[XLM_CRDC2_TAG] = false;
+	m_found[XLM_PPAC_TAG] = false;
+	m_found[MTDC_TAG] = false;
+	m_found[ULM_TAG] = false;
+	m_found[FERA_TAG] = false;
+	m_found[PHILLIPS_ADC_IONCHAMBER_TAG] = false;
+	m_found[REGISTER_TAG] = false;
+	m_found[PHILLIPS_ADC_HODOSCOPE1_TAG] = false;
+	m_found[PHILLIPS_ADC_HODOSCOPE2_TAG] = false;
+	m_found[PHILLIPS_ADC_S800_TAG] = false;
+	m_found[PHILLIPS_TDC_S800_TAG] = false;
+	//m_found[PHILLIPS_TDC_LABR_TAG] = false;
+	
 
-        } else if (tstamp < earliest) {
-
-          earliest = tstamp;
-        } else if (tstamp > earliest + WINDOW) {
-
-          //std::cerr << "*** ERROR: Uncorrelated fragments (different timestamps) !!!!!!!" << std::endl;
-          m_error[5] += 1; // Uncorrelated fragments (different timestamps) 
-          //break;
-        }
-
-
-        //	std::cout << "\nINFO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-        //	std::cout << "ID: " << std::dec << id << std::endl;
-        //	std::cout << "Size total: " << std::dec << size << ", body: " << bsize << std::endl;
-        //	std::cout << "Timestamp: " << std::dec << tstamp << std::endl;
-
-        m_found[XLM_TIMESTAMP_TAG] = false;
-        m_found[XLM_CRDC1_TAG] = false;
-        m_found[XLM_CRDC2_TAG] = false;
-        m_found[XLM_PPAC_TAG] = false;
-        m_found[MTDC_TAG] = false;
-        m_found[ULM_TAG] = false;
-        m_found[FERA_TAG] = false;
-        m_found[PHILLIPS_ADC_IONCHAMBER_TAG] = false;
-        m_found[REGISTER_TAG] = false;
-        m_found[PHILLIPS_ADC_HODOSCOPE1_TAG] = false;
-        m_found[PHILLIPS_ADC_HODOSCOPE2_TAG] = false;
-        m_found[PHILLIPS_ADC_S800_TAG] = false;
-        m_found[PHILLIPS_TDC_S800_TAG] = false;
-        m_found[PHILLIPS_TDC_LABR_TAG] = false;
-
-
-        pBody = it->s_itembody; // Define pointer to data body 
-        status = parseData(id,bsize,tstamp,pBody,event);
-        if (status != 0) goodstatus = false;
+	pBody = it->s_itembody; // Define pointer to data body 
+	status = parseData(id,bsize,tstamp,pBody,event);
+	if (status != 0) goodstatus = false;
 
       } else {
 
@@ -426,6 +425,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
     }
 
 
+       std::map<uint16_t,uint16_t> m_error;
 
 
     /* SEARCH FOR SUBPACKET TAGS *****************************************************************/
@@ -434,9 +434,6 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
 
       subpacket = *pData++; // Read sub-packet tag
       wCounter++;
-
-      //std::cout << "-------- " << std::endl;
-      //      if ( (bsize > 44) && (bsize < 80) ) std::cout << "Subpacket tag: "  << std::hex << subpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
       switch(subpacket) {
 
@@ -607,7 +604,6 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           }
 
           break;
-
 
         case MTDC_TAG:   // Mesytec TDC ////////////////////////////////////////////////////////////////////
 
@@ -1289,12 +1285,10 @@ uint16_t*  CS800Filter::DecodeFERAADC(uint16_t* pFERAdata, EventType* pFERA, int
   uint16_t wc,chan;
 
   wc = (*pFERAdata++ & 0x7800) >> 11; // Number of words: bits 11 to 14 (from bit 0)
-  //  std::cout << "FERA ADC: wc:"  << std::hex << wc << std::endl;
   if (wc > 0) {
     for (i=0; i < wc; i++) {
       chan = (*pFERAdata & 0x7800) >> 11; // Channel number
       pFERA->fera[chan] = *pFERAdata++ & 0x7ff; // ADC value: bits 0 to 10
-      //      std::cout << "FERA ADC: :"  << std::hex << pFERA->fera[chan] << std::endl;
     }
   }
 
@@ -1786,3 +1780,61 @@ void CS800Filter::finalize()
   std::cout << "----------------------------------------" << std::endl;
 }
 
+
+
+
+CRingItem* CS800Filter::handleScalerItem(CRingScalerItem* item) {
+  
+  ++m_eventCount;
+  
+  int i;
+  int offset = 1;
+
+  CRingScalerItem* product;
+
+  std::vector<uint32_t> sclrs = item->getScalers();
+  std::vector<uint32_t> newSclrs(sclrs.begin()+offset, sclrs.end());
+
+
+
+  // Mask out the upper bits [31:24]
+  // This gets rid of the QX code inserted by
+  // the CC-USB
+  uint32_t mask = 0x00ffffff;
+  uint32_t nsclr = sclrs.size();
+
+  uint32_t tag1 = (sclrs[0] & 0xffff0000)>>16;
+  uint32_t tag2 = (sclrs[0] & 0xffff);
+
+  if (tag1 == VMUSB_SCALER_TAG) {
+    return NULL;
+  }
+
+  else if (tag1 == CCUSB_SCALER_TAG) {
+
+    for (i=0; i<nsclr-offset; ++i) {
+      newSclrs[i] &= mask;
+    }
+    if ( item->hasBodyHeader() ) {
+	    product = new CRingScalerItem(item->getEventTimestamp(), 
+                            item->getSourceId(), item->getBarrierType(), 
+                            item->getStartTime(), item->getEndTime(),
+			    item->getTimestamp(), newSclrs,
+			    item->getTimeDivisor(), item->isIncremental()
+			    );
+    } else {
+	    product = new CRingScalerItem(item->getStartTime(), item->getEndTime(),
+			    item->getTimestamp(), newSclrs,
+			    item->isIncremental(), item->getTimeDivisor()
+			    );
+    }
+
+  } else {
+    return NULL;
+  }
+
+
+  product->updateSize();
+
+  return product;
+}
