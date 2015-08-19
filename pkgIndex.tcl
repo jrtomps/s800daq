@@ -8,5 +8,5 @@
 # script is sourced, the variable $dir must contain the
 # full path name of this file's directory.
 
-package ifneeded trigger2367 11.0 [list source [file join $dir ATrigger2367.tcl]]
+#package ifneeded trigger2367 11.0 [list source [file join $dir ATrigger2367.tcl]]
 package ifneeded ActionFilter 1.0 [list source [file join $dir ActionFilter.tcl]]
