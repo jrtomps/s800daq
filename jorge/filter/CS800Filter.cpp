@@ -47,30 +47,30 @@ EventType::EventType()
   mtdc(), 
   evnum(0)
 {
-  std::fill(fera, fera+sizeof(fera)/sizeof(uint16_t), 0); 
-
-  for (size_t i=0; i<6; ++i) {
-    std::fill(phillips[i], phillips[i]+17, 0);
-  }
-
-  for (size_t i=0; i<3; ++i) {
-    for (size_t j=0; j<MAXPADS; ++j) {
-      det_pads[i][j] = pad_type();
-    }
-  }
-
-
-  std::fill(npads,   npads+sizeof(npads)/sizeof(uint32_t), 0);
-  std::fill(tdc,     tdc+sizeof(tdc)/sizeof(uint16_t), 0);
-  std::fill(labrtdc, labrtdc+sizeof(labrtdc)/sizeof(uint16_t), 0);
-  std::fill(coinc,   coinc+sizeof(coinc)/sizeof(uint16_t), 0);
-
-  std::fill(timestamp_bit[0], timestamp_bit[0]+NTSWORDS, 0);
-  std::fill(timestamp_bit[1], timestamp_bit[1]+NTSWORDS, 0);
-  std::fill(timestamp,    timestamp+2, 0);
-  std::fill(evnum_bit[0], evnum_bit[0]+NEVNUMWORDS, 0);
-  std::fill(evnum_bit[1], evnum_bit[1]+NEVNUMWORDS, 0);
-
+//  std::fill(fera, fera+sizeof(fera)/sizeof(uint16_t), 0); 
+//
+//  for (size_t i=0; i<6; ++i) {
+//    std::fill(phillips[i], phillips[i]+17, 0);
+//  }
+//
+//  for (size_t i=0; i<3; ++i) {
+//    for (size_t j=0; j<MAXPADS; ++j) {
+//      det_pads[i][j] = pad_type();
+//    }
+//  }
+//
+//
+//  std::fill(npads,   npads+sizeof(npads)/sizeof(uint32_t), 0);
+//  std::fill(tdc,     tdc+sizeof(tdc)/sizeof(uint16_t), 0);
+//  std::fill(labrtdc, labrtdc+sizeof(labrtdc)/sizeof(uint16_t), 0);
+//  std::fill(coinc,   coinc+sizeof(coinc)/sizeof(uint16_t), 0);
+//
+//  std::fill(timestamp_bit[0], timestamp_bit[0]+NTSWORDS, 0);
+//  std::fill(timestamp_bit[1], timestamp_bit[1]+NTSWORDS, 0);
+//  std::fill(timestamp,    timestamp+2, 0);
+//  std::fill(evnum_bit[0], evnum_bit[0]+NEVNUMWORDS, 0);
+//  std::fill(evnum_bit[1], evnum_bit[1]+NEVNUMWORDS, 0);
+//
 }
 
 
@@ -214,10 +214,10 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 	}
 	
 	
-	std::cout << "\nINFO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-	std::cout << "ID: " << std::dec << id << std::endl;
-	std::cout << "Size total: " << std::dec << size << ", body: " << bsize << std::endl;
-	std::cout << "Timestamp: " << std::dec << tstamp << std::endl;
+//	std::cout << "\nINFO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+//	std::cout << "ID: " << std::dec << id << std::endl;
+//	std::cout << "Size total: " << std::dec << size << ", body: " << bsize << std::endl;
+//	std::cout << "Timestamp: " << std::dec << tstamp << std::endl;
 	
 	m_found[XLM_TIMESTAMP_TAG] = false;
 	m_found[XLM_CRDC1_TAG] = false;
@@ -434,13 +434,13 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
 
     /* SEARCH FOR SUBPACKET TAGS *****************************************************************/
 
-    while(wCounter != nWords) {
+    while(wCounter < nWords) {
       
       subpacket = *pData++; // Read sub-packet tag
       wCounter++;
       
       //std::cout << "-------- " << std::endl;
-      if ( (bsize > 44) && (bsize < 80) ) std::cout << "Subpacket tag: "  << std::hex << subpacket << ". Counted words: " << std::dec << wCounter << std::endl;
+//      if ( (bsize > 44) && (bsize < 80) ) std::cout << "Subpacket tag: "  << std::hex << subpacket << ". Counted words: " << std::dec << wCounter << std::endl;
    
       switch(subpacket) {
 	
@@ -1054,6 +1054,8 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
 	std::cerr << "*** ERROR: Unknown word in fragment body!!!!!!!! "  << std::hex << subpacket << std::endl;
 	m_error[11] += 1;
 	status = 1;
+        std::cout << "Word count = " << std::dec << wCounter << " nWords=" << nWords << std::endl;
+
 	return status;
         //break;
 
@@ -1291,12 +1293,12 @@ uint16_t*  CS800Filter::DecodeFERAADC(uint16_t* pFERAdata, EventType* pFERA, int
   uint16_t wc,chan;
 
   wc = (*pFERAdata++ & 0x7800) >> 11; // Number of words: bits 11 to 14 (from bit 0)
-  std::cout << "FERA ADC: wc:"  << std::hex << wc << std::endl;
+//  std::cout << "FERA ADC: wc:"  << std::hex << wc << std::endl;
   if (wc > 0) {
     for (i=0; i < wc; i++) {
       chan = (*pFERAdata & 0x7800) >> 11; // Channel number
       pFERA->fera[chan] = *pFERAdata++ & 0x7ff; // ADC value: bits 0 to 10
-      std::cout << "FERA ADC: :"  << std::hex << pFERA->fera[chan] << std::endl;
+//      std::cout << "FERA ADC: :"  << std::hex << pFERA->fera[chan] << std::endl;
     }
   }
   

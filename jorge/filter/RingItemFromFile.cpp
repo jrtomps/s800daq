@@ -22,17 +22,14 @@ void fillBodyFromFile(CRingItem* pItem, std::string fname)
   uint64_t tstamp;
   file >> hex >> tstamp;
   pBody = copyIn(pBody, tstamp);
-  cout << "Tstamp = " << tstamp << dec << endl;
 
   uint32_t id;
   file >> hex >> id;
-  cout << hex << id << dec << endl;
 
   pBody = copyIn(pBody, id);
 
   uint32_t barrier;
   file >> hex >> barrier;
-  cout << hex << barrier << dec << endl;
 
   pBody = copyIn(pBody, barrier);
 
