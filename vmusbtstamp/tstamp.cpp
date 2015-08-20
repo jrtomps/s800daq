@@ -37,4 +37,8 @@ extern "C" {
 	return tstamp;
   }
 
+  uint64_t getScalerTimestamp(void *pBuffer) {
+	return 0;
+  }
+
 }

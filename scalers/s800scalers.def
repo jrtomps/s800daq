@@ -1,0 +1,13 @@
+
+
+page s800 S800
+for {set ch 0} {$ch < 32} {incr ch} {
+ 	set name [format "name_%d" $ch]
+	channel -incremental 0 $name $ch.0
+	display_single s800 $name 
+}
+
+
+page ratios Ratios
+
+display_ratio ratios name_0 name_1
