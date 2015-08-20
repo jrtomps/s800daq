@@ -16,8 +16,19 @@
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
+#include <iterator>
 
 using namespace std;
+
+template<class T>
+std::ostream& operator<<(std::ostream& stream, const std::vector<T>& vec) {
+  stream << "{";
+  size_t size = vec.size();
+  for ( size_t i=0; i<size; ++i) stream << vec.at(i) << ", ";
+  stream << "}";
+  return stream;
+}
+
 
 class S800FilterTest : public CppUnit::TestFixture 
 {
@@ -26,7 +37,8 @@ class S800FilterTest : public CppUnit::TestFixture
   CPPUNIT_TEST(test_1);
   CPPUNIT_TEST(parseCCUSB_0);
   CPPUNIT_TEST(parseVMUSB_0);
-  CPPUNIT_TEST(formatData_0);
+  CPPUNIT_TEST(handleScalers_0);
+  CPPUNIT_TEST(handleScalers_1);
   CPPUNIT_TEST_SUITE_END();
 
   private:
@@ -228,8 +240,145 @@ class S800FilterTest : public CppUnit::TestFixture
 
   }
 
-  void formatData_0() {
+  void handleScalers_0() {
+    uint32_t start = 18;	
+    uint32_t stop = 19;	
+    time_t now = 0x01234567;
+    vector<uint32_t> sclrs;
+    sclrs.reserve(32);
+    sclrs.push_back(1144309760);
+    sclrs.push_back(50355969);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50355969);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50355969);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50530896);
+    sclrs.push_back(50530896);
+    sclrs.push_back(50355969);
+    sclrs.push_back(50331847);
+    sclrs.push_back(50331668);
+    sclrs.push_back(50355969);
+    sclrs.push_back(50355970);
+    sclrs.push_back(50355970);
+    sclrs.push_back(50355970);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50355969);
+    uint32_t sourceId = 0;
+    uint64_t tstamp = 0x12341234;
+    uint32_t barrierType = 0;
+
+    vector<uint32_t> expect;
+    expect.reserve(sclrs.size()-1);
+    transform(sclrs.begin()+1, sclrs.end(), back_inserter(expect), 
+                [](const uint32_t& value) {
+                  return (0x00ffffff&value);
+                });
+    unique_ptr<CRingScalerItem> pInputItem(new CRingScalerItem(tstamp, sourceId, 
+                                                                barrierType, start, 
+                                                                stop, now, 
+                                                                sclrs, 1, false));
+
+    CRingItem* pOutputItem = pFilter->handleScalerItem(pInputItem.get());
+      
+    CRingScalerItem& sclrItem = dynamic_cast<CRingScalerItem&>(*pOutputItem);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "Source id", sourceId, sclrItem.getSourceId() );
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "Timestamp", tstamp, sclrItem.getEventTimestamp() );
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "barrier", barrierType, sclrItem.getBarrierType() );
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "sclrs", expect, sclrItem.getScalers() );
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "Start time", start, sclrItem.getStartTime() );
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "End time", stop, sclrItem.getEndTime() );
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "Unix time", now, sclrItem.getTimestamp() );
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "Body header", true, sclrItem.hasBodyHeader() );
+    if (pInputItem.get() != pOutputItem) {
+      delete pOutputItem;
+    }
   }
+
+
+  void handleScalers_1() {
+    uint32_t start = 18;	
+    uint32_t stop = 19;	
+    time_t now = 0x01234567;
+    vector<uint32_t> sclrs;
+    sclrs.reserve(32);
+    sclrs.push_back(1144309760);
+    sclrs.push_back(50355969);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50355969);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50355969);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50530896);
+    sclrs.push_back(50530896);
+    sclrs.push_back(50355969);
+    sclrs.push_back(50331847);
+    sclrs.push_back(50331668);
+    sclrs.push_back(50355969);
+    sclrs.push_back(50355970);
+    sclrs.push_back(50355970);
+    sclrs.push_back(50355970);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50331648);
+    sclrs.push_back(50355969);
+    uint32_t sourceId = 0;
+    uint64_t tstamp = 0x12341234;
+    uint32_t barrierType = 0;
+
+    vector<uint32_t> expect;
+    expect.reserve(sclrs.size()-1);
+    transform(sclrs.begin()+1, sclrs.end(), back_inserter(expect), 
+                [](const uint32_t& value) {
+                  return (0x00ffffff&value);
+                });
+    unique_ptr<CRingScalerItem> pInputItem(new CRingScalerItem(start, 
+                                                                stop, now, 
+                                                                sclrs, false, 
+                                                                1));
+
+    CRingItem* pOutputItem = pFilter->handleScalerItem(pInputItem.get());
+      
+    CRingScalerItem& sclrItem = dynamic_cast<CRingScalerItem&>(*pOutputItem);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "sclrs", expect, sclrItem.getScalers() );
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "Start time", start, sclrItem.getStartTime() );
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "End time", stop, sclrItem.getEndTime() );
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "Unix time", now, sclrItem.getTimestamp() );
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "Body header", false, sclrItem.hasBodyHeader() );
+    if (pInputItem.get() != pOutputItem) {
+      delete pOutputItem;
+    }
+  }
+
+
 
   void comparePhillips(const uint16_t* actual, const std::vector<uint16_t>& expected, std::string context)
   {
@@ -241,6 +390,9 @@ class S800FilterTest : public CppUnit::TestFixture
           actual[i]);
     }
   }
+
+
+
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(S800FilterTest);
