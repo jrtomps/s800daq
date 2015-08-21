@@ -25,3 +25,5 @@ trigger Configure $trigger(firmware)
 # Now load the latest configuration from the saved file
 puts "Initializing trigger ULM2367 module FPGA."
 initTrigger2367 $CCUSB 17 $trigger(configuration)
+
+puts "Done."
