@@ -7,9 +7,10 @@ package require Actions
 package require DefaultActions
 
 package require RunstateMachine
+package require ring
 
 namespace eval ActionFilter {
-  variable pipe ""
+  variable pipe {}
   variable parser [::Actions %AUTO%]
   set ::DefaultActions::name "ActionFilter"
   
@@ -21,40 +22,42 @@ namespace eval ActionFilter {
   }
 
   proc enter {from to} {
-   puts "ActionFilter::enter $from $to"
   }
 
   proc leave {from to} {
-   puts "ActionFilter::leave $from $to"
     if {($from eq "Halted") && ($to eq "Active")} {
-      puts "startFilter"
       startFilter
     }
 
   }
 
   proc attach {state} {
-    puts "ActionFilter::attach $state"
   }
 
+
+  proc killOldProvider {ringName} {
+        if {$ringName in [ringbuffer list]} {
+		set usage [ringbuffer usage $ringName]
+		set producerPid [lindex $usage 3]
+		if {$producerPid != -1} {
+			ReadoutGUIPanel::Log ActionFilter warning "Killing off old producing process with PID=$producerPid"			
+			exec kill $producerPid
+		}
+	}
+  }
 
   proc startFilter {} {
     variable pipe
     variable parser
-    # kill off old filter if it still exists
-    if {$pipe ne ""} {
-      set pids [pid $pipe]
-      foreach pid $pids { exec kill $pid }
+    # on the first time running, kill of old processes, and launch a new one.
+    if {$pipe eq {}} {
+	killOldProvider s800filter
+	set cmd [file join /user s800 converged_daq jorge filter UserFilter]
+	set pipe [open "| $cmd  --source=tcp://localhost/s800built --sink=tcp://localhost/s800filter |& cat" r]
+	chan configure $pipe -blocking 0
+	chan configure $pipe -buffering line
+	chan event $pipe readable [list $parser onReadable $pipe]
     }
-
-#    set cmd [file join /home tompkins actions slave filter UserFilter]
-    set cmd [file join /user s800 converged_daq jorge filter UserFilter]
-#    set pipe [open "| $cmd  --source=tcp://localhost/tompkins --sink=file:///dev/null --oneshot |& cat" r]
-    set pipe [open "| $cmd  --source=tcp://localhost/s800built --sink=tcp://localhost/s800filter |& cat" r]
-    chan configure $pipe -blocking 0
-    chan configure $pipe -buffering line
-    chan event $pipe readable [list $parser onReadable $pipe]
-    puts "Filter is $pipe"
   }
 
   namespace export enter leave attach
