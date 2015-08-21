@@ -1780,7 +1780,6 @@ void CS800Filter::FormatData(int status, EventType* pEvent)
   /****S800_VME_TDC_PACKET****/
   for (i = 0; i < 32; i++) {
     for (j = 0; j < pEvent->mtdc.hits[i]; j++) {
-      std::cout << "hit[" << i << "] = " << pEvent->mtdc.hits[i] << std::endl;
       if (pEvent->mtdc.data[i][j] > 0) {
         m_sortedData[PACKET_MTDC].push_back((j<<8) + i); // hit number is coded in first 8 bits
         m_sortedData[PACKET_MTDC].push_back(pEvent->mtdc.data[i][j]); // This is 16 bit data
