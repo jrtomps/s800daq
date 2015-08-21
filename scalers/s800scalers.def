@@ -1,13 +1,75 @@
-
-
 page s800 S800
-for {set ch 0} {$ch < 32} {incr ch} {
- 	set name [format "name_%d" $ch]
-	channel -incremental 0 $name $ch.0
-	display_single s800 $name 
-}
 
+ channel -incremental 0 S800.Source 0.0
+ channel -incremental 0 Second.Source 1.0
+ channel -incremental 0 Ext1.Source 2.0
+ channel -incremental 0 Ext2.Source 3.0
+ channel -incremental 0 S800.Trigger 4.0
+ channel -incremental 0 Coinc.Trigger 5.0
+ channel -incremental 0 Ext1.Trigger 6.0
+ channel -incremental 0 Ext2.Trigger 7.0
+ channel -incremental 0 Second.Trigger 8.0
+ channel -incremental 0 Raw.Trigger 9.0
+ channel -incremental 0 Live.Trigger 10.0
+ channel -incremental 0 Raw.Clock 11.0
+ channel -incremental 0 Live.Clock 12.0
+ channel -incremental 0 10Hz 14.0
+ channel -incremental 0 1Hz 15.0
+ channel -incremental 0 E1.Up 16.0
+ channel -incremental 0 E1.Down 17.0
+ channel -incremental 0 XFP.Scint 18.0
+ channel -incremental 0 OBJ.Scint 19.0
+ channel -incremental 0 Galotte 20.0
+ channel -incremental 0 CRDC1.Anode 22.0
+ channel -incremental 0 CRDC2.Anode 23.0
+ channel -incremental 0 Hodo.OR 28.0
+# channel -incremental 0 S800.Source 31.0
+
+ display_single s800  S800.Source 
+ display_single s800  Second.Source
+ display_single s800  Ext1.Source
+ display_single s800  Ext2.Source 
+ display_single s800  S800.Trigger 
+ display_single s800  Coinc.Trigger 
+ display_single s800  Ext1.Trigger 
+ display_single s800  Ext2.Trigger 
+ display_single s800  Second.Trigger 
+ display_single s800  Raw.Trigger 
+ display_single s800  Live.Trigger 
+ display_single s800  Raw.Clock 
+ display_single s800  Live.Clock 
+ display_single s800  10Hz 
+ display_single s800  1Hz 
+ display_single s800  E1.Up 
+ display_single s800  E1.Down 
+ display_single s800  XFP.Scint 
+ display_single s800  OBJ.Scint 
+ display_single s800  Galotte 
+ display_single s800  CRDC1.Anode 
+ display_single s800  CRDC2.Anode 
+ display_single s800  Hodo.OR 
+ display_single s800  S800.Source 
 
 page ratios Ratios
 
-display_ratio ratios name_0 name_1
+ display_ratio ratios Live.Trigger Raw.Trigger
+ display_ratio ratios Live.Clock Raw.Clock
+ display_ratio ratios S800.Source Second.Trigger 
+ display_ratio ratios Second.Source Second.Trigger
+ display_ratio ratios Ext1.Source Ext1.Trigger
+ display_ratio ratios Ext2.Source Ext2.Trigger
+ display_single ratios Coinc.Trigger
+ display_ratio ratios E1.Up E1.Down
+ display_ratio ratios OBJ.Scint XFP.Scint
+ display_ratio ratios Galotte XFP.Scint
+ display_ratio ratios CRDC1.Anode CRDC2.Anode
+ display_ratio ratios S800.Source Galotte
+ display_ratio ratios S800.Source OBJ.Scint
+ display_ratio ratios S800.Source XFP.Scint
+ display_single ratios Hodo.OR
+ display_ratio ratios 10Hz 1Hz
+
+
+stripratio Live.Trigger Raw.Trigger
+stripratio Live.Clock Raw.Clock 
+stripconfig -timeaxis 1200
