@@ -191,9 +191,6 @@ struct pad_type
 {
   uint16_t sch;
   uint16_t d[4];
-
-  pad_type();
-
 };
 
 struct mesytec_header_type
