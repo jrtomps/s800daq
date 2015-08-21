@@ -181,6 +181,12 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 	while(j>=0) {
 	  if (id == sid[j]) {
 	    //std::cerr << "*** ERROR: Different fragments have same source ID!!!!!!!" << std::endl;
+
+
+	    std::stringstream msg;
+	    msg << " *** ERROR:  Different fragments have same source ID!!!!!!!";
+	    Actions::Error ( msg.str() ); 
+
 	    m_error[3] += 1; // Repeated source ID
 	    break;
 	  }
@@ -195,6 +201,10 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 	if (tstamp == 0) {
 	  
 	  //std::cerr << "*** ERROR: Timestamp = 0 !!!!!!!" << std::endl;
+	  std::stringstream msg;
+	  msg << " *** ERROR:  Timestamp = 0 !!!!!!!";
+	  Actions::Error ( msg.str() ); 
+
 	  m_error[4] += 1; // Corrupted timestamp = 0 
 	  //break;
 	  
@@ -204,6 +214,11 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 	} else if (tstamp > earliest + WINDOW) {
 	  
 	  //std::cerr << "*** ERROR: Uncorrelated fragments (different timestamps) !!!!!!!" << std::endl;
+	  std::stringstream msg;
+	  msg << " *** ERROR: Uncorrelated fragments (different timestamps) !!!!!!! ";
+	  Actions::Error ( msg.str() ); 
+
+
 	  m_error[5] += 1; // Uncorrelated fragments (different timestamps) 
 	  //break;
 	}
@@ -237,6 +252,12 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
       } else {
 
         //std::cerr << "*** ERROR: Ew !!! A head-less ITEM !!!!!!!" << std::endl;
+
+	std::stringstream msg;
+	msg << " *** ERROR: Ew !!! A head-less ITEM !!!!!!! ";
+	Actions::Error ( msg.str() ); 
+
+
         m_error[2] += 1; // Fragment has no header
         goodstatus = false;
 
@@ -254,6 +275,10 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
   } else {
 
     //std::cerr << " *** ERROR: Number of fragments is NOT 2 !!!!!!!" << std::endl;
+    std::stringstream msg;
+    msg << " *** ERROR: Number of fragments is NOT 2 !!!!!!!";
+    Actions::Error ( msg.str() ); 
+
     m_error[1] += 1; // Wrong number of fragments 
     goodstatus = false;
 
@@ -267,13 +292,15 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
   int ntrue = countTrue(m_found);
   if (ntrue!=m_found.size()) {
     //std::cerr << " *** ERROR: Incomplete RingItem !!!!!!!" << std::endl;
+    //std::stringstream msg;
+    //msg << " *** ERROR: Incomplete RingItem !!!";
+    //Actions::Error ( msg.str() ); 
+
     m_error[10] += 1; // Incomplete RingItem
     //    goodstatus = false;
 
 
-    //std::stringstream msg;
-    //msg << " *** ERROR: Incomplete RingItem ";
-    //Actions::Error ( msg.str() ); 
+
     //Actions::PauseRun();
     //Actions::EndRun(true);
 
@@ -337,7 +364,13 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
   //std::cout << "Words: " << std::dec << nWords << std::endl;
 
   if (nWords != (bsize-1) ) {
-    std::cerr << "*** ERROR: Bad word counting!!!!!!!" << std::endl;
+    //std::cerr << "*** ERROR: Bad word counting!!!!!!!" << std::endl;
+    std::stringstream msg;
+    msg << " *** ERROR: Bad word counting!!!!!!!";
+    Actions::Error ( msg.str() ); 
+
+
+
     m_error[6] += 1; // Value of body size taken from body disagrees with value taken from header   
 
     status = 1;
@@ -457,14 +490,21 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             wCounter += readWords;
 
             if (pEvent->timestamp[timeflag] == 0 || (pEvent->timestamp[timeflag] != htime) ) {
-              std::cerr << "*** ERROR: Wrong timestamp!!!!!!!"  << std::hex << pEvent->timestamp[timeflag] << std::endl;
-              m_error[9] += 1;
+              //std::cerr << "*** ERROR: Wrong timestamp!!!!!!!"  << std::hex << pEvent->timestamp[timeflag] << std::endl;
+	      std::stringstream msg;
+	      msg << " *** ERROR: Wrong timestamp!!!!!!!";
+	      Actions::Error ( msg.str() ); 
+ 	      m_error[9] += 1;
               status = 1;
               return status;
             }
 
           } else {
-            std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+            //std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: duplicated subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
+
             m_error[8] += 1;
             status = 1;
             return status;
@@ -476,7 +516,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != XLM_TIMESTAMP_ETAG) { // Check that we are at the end of the subpacket
-            std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+            //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: Missing end-of-subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[7] += 1;
             status = 1;
             return status;
@@ -505,7 +548,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             wCounter += readWords;
 
           } else {
-            std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+            //std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: duplicated subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[8] += 1;
             status = 1;
             return status;
@@ -518,7 +564,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != XLM_CRDC1_ETAG) { // Check that we are at the end of the subpacket
-            std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+            //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: Missing end-of-subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[7] += 1;
             status = 1;
             return status;
@@ -544,7 +593,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             wCounter += readWords;
 
           } else {
-            std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+            //std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: duplicated subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[8] += 1;
             status = 1;
             return status;
@@ -557,7 +609,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != XLM_CRDC2_ETAG) { // Check that we are at the end of the subpacket
-            std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+            //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: Missing end-of-subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[7] += 1;
             status = 1;
             return status;
@@ -584,7 +639,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             wCounter += readWords;
 
           } else {
-            std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+            //std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: duplicated subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[8] += 1;
             status = 1;
             return status;
@@ -597,7 +655,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != XLM_PPAC_ETAG) { // Check that we are at the end of the subpacket
-            std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+            //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: Missing end-of-subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[7] += 1;
             status = 1;
             return status;
@@ -622,7 +683,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             wCounter += readWords;
 
           } else {
-            std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+            //std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: duplicated subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[8] += 1;
             status = 1;
             return status;
@@ -635,7 +699,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != MTDC_ETAG) { // Check that we are at the end of the subpacket
-            std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+            //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: Missing end-of-subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[7] += 1;
             status = 1;
             return status;
@@ -671,12 +738,22 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
 
 
             if (pEvent->timestamp[timeflag] == 0 || (pEvent->timestamp[timeflag] != htime) ) {
-              std::cerr << "*** ERROR: Wrong timestamp!!!!!!!"  << std::hex << pEvent->timestamp[timeflag] << std::endl;
-              status = 32;
+              //std::cerr << "*** ERROR: Wrong timestamp!!!!!!!"  << std::hex << pEvent->timestamp[timeflag] << std::endl;
+	      std::stringstream msg;
+	      msg << " *** ERROR: Wrong timestamp!!!!!!!";
+	      Actions::Error ( msg.str() ); 
+
+	      m_error[9] += 1;
+              status = 1;
+              return status;
+
             }
 
           } else {
-            std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+            //std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: duplicated subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[8] += 1;
             status = 1;
             return status;
@@ -690,7 +767,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != ULM_ETAG) { // Check that we are at the end of the subpacket
-            std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+            //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: Missing end-of-subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[7] += 1;
             status = 1;
             return status;
@@ -715,7 +795,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             wCounter += readWords;
 
           } else {
-            std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+            //std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: duplicated subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[8] += 1;
             status = 1;
             return status;
@@ -728,7 +811,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != FERA_ETAG) { // Check that we are at the end of the subpacket
-            std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+            //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: Missing end-of-subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[7] += 1;
             status = 1;
             return status;
@@ -756,7 +842,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             wCounter += readWords;
 
           } else {
-            std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+            //std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: duplicated subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[8] += 1;
             status = 1;
             return status;
@@ -769,7 +858,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != PHILLIPS_ADC_IONCHAMBER_ETAG) { // Check that we are at the end of the subpacket
-            std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+            //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: Missing end-of-subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[7] += 1;
             status = 1;
             return status;
@@ -802,7 +894,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             wCounter+=4;
 
           } else {
-            std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+            //std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: duplicated subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[8] += 1;
             status = 1;
             return status;
@@ -815,7 +910,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != REGISTER_ETAG) { // Check that we are at the end of the subpacket
-            std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+            //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: Missing end-of-subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[7] += 1;
             status = 1;
             return status;
@@ -843,7 +941,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             wCounter += readWords;
 
           } else {
-            std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+            //std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: duplicated subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[8] += 1;
             status = 1;
             return status;
@@ -856,7 +957,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != PHILLIPS_ADC_HODOSCOPE1_ETAG) { // Check that we are at the end of the subpacket
-            std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+            //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: Missing end-of-subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[7] += 1;
             status = 1;
             return status;
@@ -885,7 +989,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             wCounter += readWords;
 
           } else {
-            std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+            //std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: duplicated subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[8] += 1;
             status = 1;
             return status;
@@ -898,7 +1005,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != PHILLIPS_ADC_HODOSCOPE2_ETAG) { // Check that we are at the end of the subpacket
-            std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+            //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: Missing end-of-subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[7] += 1;
             status = 1;
             return status;
@@ -929,7 +1039,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             wCounter += readWords;
 
           } else {
-            std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+            //std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: duplicated subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[8] += 1;
             status = 1;
             return status;
@@ -942,7 +1055,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != PHILLIPS_ADC_S800_ETAG) { // Check that we are at the end of the subpacket
-            std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+            //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: Missing end-of-subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[7] += 1;
             status = 1;
             return status;
@@ -970,7 +1086,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             wCounter += readWords;
 
           } else {
-            std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+            //std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: duplicated subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[8] += 1;
             status = 1;
             return status;
@@ -983,7 +1102,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != PHILLIPS_TDC_S800_ETAG) { // Check that we are at the end of the subpacket
-            std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+            //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: Missing end-of-subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[7] += 1;
             status = 1;
             return status;
@@ -1017,7 +1139,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             wCounter += readWords;
 
           } else {
-            std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+            //std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: duplicated subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[8] += 1;
             status = 1;
             return status;
@@ -1030,7 +1155,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != PHILLIPS_TDC_LABR_ETAG) { // Check that we are at the end of the subpacket
-            std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+            //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
+	    std::stringstream msg;
+	    msg << " *** ERROR: Missing end-of-subpacket tag!!!!!!!";
+	    Actions::Error ( msg.str() ); 
             m_error[7] += 1;
             status = 1;
             return status;
@@ -1043,7 +1171,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
 
         default:
 
-          std::cerr << "*** ERROR: Unknown word in fragment body!!!!!!!! "  << std::hex << subpacket << std::endl;
+          //std::cerr << "*** ERROR: Unknown word in fragment body!!!!!!!! "  << std::hex << subpacket << std::endl;
+	  std::stringstream msg;
+	  msg << " *** ERROR: Unknown word in fragment body!!!!!!!! ";
+	  Actions::Error ( msg.str() ); 
           m_error[11] += 1;
           status = 1;
           std::cout << "Word count = " << std::dec << wCounter << " nWords=" << nWords << std::endl;
@@ -1064,7 +1195,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
 
 
   } else {
-    std::cerr << "*** ERROR: Unknown controller tag!!!!!!!" << std::endl;
+    //std::cerr << "*** ERROR: Unknown controller tag!!!!!!!" << std::endl;
+    std::stringstream msg;
+    msg << " *** ERROR: Unknown controller tag!!!!!!!";
+    Actions::Error ( msg.str() ); 
     m_error[12] += 1; // Unknown controller
     status = 1;
     return status;    
@@ -1168,7 +1302,10 @@ uint16_t*  CS800Filter::DecodeXLMpads(uint16_t* pPaddata, EventType* pPad, int d
     maxpads = NPPACSTRIPS*NPPACPLANES*NPPACS*NPPACSAMPLES;
 
   } else {
-    std::cerr << "*** ERROR: Unknown pad detector!!!!!!!"  <<  std::endl;
+    //std::cerr << "*** ERROR: Unknown pad detector!!!!!!!"  <<  std::endl;
+    std::stringstream msg;
+    msg << " *** ERROR: Unknown pad detector!!!!!!!";
+    Actions::Error ( msg.str() ); 
     status = 1;
     return pPaddata;
   }
@@ -1182,7 +1319,10 @@ uint16_t*  CS800Filter::DecodeXLMpads(uint16_t* pPaddata, EventType* pPad, int d
     /* attempt to skip over */
     //nCorrPads++;
     pPaddata += 2046;
-    std::cerr << "*** ERROR: too many pads!!!!!!!"  << std::dec << npads << std::endl;
+    //std::cerr << "*** ERROR: too many pads!!!!!!!"  << std::dec << npads << std::endl;
+    std::stringstream msg;
+    msg << " *** ERROR: too many pads!!!!!!!";
+    Actions::Error ( msg.str() ); 
     status = 1;
 
     return pPaddata;
@@ -1243,7 +1383,10 @@ uint16_t*  CS800Filter::DecodeMTDC(uint16_t* pMTDCdata, EventType* pMTDC, int st
   pMTDC->mtdc.header.module_id = temp16 & 0xFF; 
 
   if (pMTDC->mtdc.header.nwords-1 > 32) {
-    std::cerr << "*** ERROR: too many channels seen for mesytec TDC !!!! "  << std::dec << pMTDC->mtdc.header.nwords << std::endl;
+    //std::cerr << "*** ERROR: too many channels seen for mesytec TDC !!!! "  << std::dec << pMTDC->mtdc.header.nwords << std::endl;
+    std::stringstream msg;
+    msg << " *** ERROR: too many channels seen for mesytec TDC !!!! ";
+    Actions::Error ( msg.str() ); 
     status = 1;
     return pMTDCdata;
   }
