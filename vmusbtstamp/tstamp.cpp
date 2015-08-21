@@ -4,8 +4,13 @@
 #include <DataFormat.h>
 #include <cstdint>
 #include <cstring>
+#include <iostream>
+#include <iomanip>
 
 extern "C" {
+
+  uint64_t lasttimestamp=0;
+
 
   uint64_t getEventTimestamp(void *pBuffer) 
   {
@@ -33,12 +38,23 @@ extern "C" {
 		memcpy(&tstamp, pData, sizeof(tstamp)); 
 	}
 
+	if (tstamp <= lasttimestamp) {
+		std::cout << "VMUSB timestamp jumped BACKWARDS from: " 
+			<< "\nhex: " << std::hex << std::setw(12) << lasttimestamp << " --> " << std::setw(12) << tstamp
+			<< "\ndec:" << std::dec << std::setw(12) << lasttimestamp << " --> " << std::setw(12) << tstamp 
+			<< std::endl;
+	}
         
+	lasttimestamp = tstamp;
+
 	return tstamp;
   }
 
+
+
+
   uint64_t getScalerTimestamp(void *pBuffer) {
-	return 0;
+	return lasttimestamp;
   }
 
 }
