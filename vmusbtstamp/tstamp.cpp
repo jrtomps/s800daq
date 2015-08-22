@@ -57,4 +57,9 @@ extern "C" {
 	return lasttimestamp;
   }
 
+
+  void onBeginRun() {
+	std::cout << "VMUSB onBeginRun() Zeroing the timestamp!" << std::endl;
+	lasttimestamp = 0;
+  }
 }

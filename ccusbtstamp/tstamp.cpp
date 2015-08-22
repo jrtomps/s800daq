@@ -79,4 +79,9 @@ extern "C" {
     return last_timestamp; //use ULM timestamp from last physicis event
 
   }
+
+  void onBeginRun() {
+	std::cout << "CCUSB onBeginRun() :: Zeroing timestamp" << std::endl;
+	last_timestamp = 0;
+  }
 }

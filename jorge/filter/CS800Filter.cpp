@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 
 #include <FragmentIndex.h>
 
@@ -157,7 +158,7 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
   if (NF == 2) { // Number of fragments in Item MUST BE 2 (VM-USB and CC-USB)
 
 
-    uint64_t earliest = 9999999999;
+    uint64_t earliest = std::numeric_limits<uint64_t>::max();
     i = 0;
 
     FragmentIndex::iterator it = index.begin();
