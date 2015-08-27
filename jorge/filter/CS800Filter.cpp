@@ -4,6 +4,8 @@
 #include <DataFormat.h>
 #include <Actions.h>
 
+#include <Exception.h>
+
 #include <iostream>
 #include <iomanip>
 #include <exception>
@@ -143,6 +145,7 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
   uint32_t sid[MAXNF] = {0,0,0,0,0,0,0,0,0,0};
 
 
+  try {
 
   FragmentIndex index(reinterpret_cast<uint16_t*>(pItem->getBodyPointer())); 
   size_t NF = index.getNumberFragments(); // Number of fragments in EVB ringitem
@@ -318,6 +321,24 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
   PublishData(publish); // Publish new ring item
 
 
+  } catch (std::exception& exc) { std::stringstream msg;
+	msg << "Caught a std::exception : " << exc.what();	
+	Actions::Error(msg.str());
+	Actions::EndRun();
+  } catch (CException& exc) {
+	std::stringstream msg;
+	msg << "Caught a CException : " << exc.ReasonText() << " while doing: " << exc.WasDoing();
+	Actions::Error(msg.str());
+	Actions::EndRun();
+  } catch (std::string errmsg) {
+	std::stringstream msg;
+	msg << "Caught a string exception : " << errmsg;
+	Actions::Error(msg.str());
+	Actions::EndRun();
+  } catch (...) {
+	Actions::Error("Caught an unknown exception! Shutting down!");
+	Actions::EndRun();
+  }
 
 
 //  delete event;
@@ -1204,6 +1225,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
     return status;    
   }
 
+
   return status;
 } 
 
@@ -1978,6 +2000,5 @@ CRingItem* CS800Filter::handleScalerItem(CRingScalerItem* item) {
 
 
   product->updateSize();
-
   return product;
 }
