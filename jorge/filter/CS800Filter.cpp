@@ -322,17 +322,17 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 
 
   } catch (std::exception& exc) { std::stringstream msg;
-	msg << "Caught a std::exception : " << exc.what();	
+	msg << "Caught a std::exception in event handler: " << exc.what();	
 	Actions::Error(msg.str());
 	Actions::EndRun();
   } catch (CException& exc) {
 	std::stringstream msg;
-	msg << "Caught a CException : " << exc.ReasonText() << " while doing: " << exc.WasDoing();
+	msg << "Caught a CException in event handler: " << exc.ReasonText() << " while doing: " << exc.WasDoing();
 	Actions::Error(msg.str());
 	Actions::EndRun();
   } catch (std::string errmsg) {
 	std::stringstream msg;
-	msg << "Caught a string exception : " << errmsg;
+	msg << "Caught a string exception in event handler: " << errmsg;
 	Actions::Error(msg.str());
 	Actions::EndRun();
   } catch (...) {
@@ -1957,6 +1957,8 @@ CRingItem* CS800Filter::handleScalerItem(CRingScalerItem* item) {
 
   CRingScalerItem* product;
 
+  try {
+
   std::vector<uint32_t> sclrs = item->getScalers();
   std::vector<uint32_t> newSclrs(sclrs.begin()+offset, sclrs.end());
 
@@ -2000,5 +2002,24 @@ CRingItem* CS800Filter::handleScalerItem(CRingScalerItem* item) {
 
 
   product->updateSize();
+
+  } catch (std::exception& exc) { std::stringstream msg;
+	msg << "Caught a std::exception in scaler handler: " << exc.what();	
+	Actions::Error(msg.str());
+	Actions::EndRun();
+  } catch (CException& exc) {
+	std::stringstream msg;
+	msg << "Caught a CException in scaler handler: " << exc.ReasonText() << " while doing: " << exc.WasDoing();
+	Actions::Error(msg.str());
+	Actions::EndRun();
+  } catch (std::string errmsg) {
+	std::stringstream msg;
+	msg << "Caught a string exception in scaler handler: " << errmsg;
+	Actions::Error(msg.str());
+	Actions::EndRun();
+  } catch (...) {
+	Actions::Error("Caught an unknown exception in scaler handler! Shutting down!");
+	Actions::EndRun();
+  }
   return product;
 }
