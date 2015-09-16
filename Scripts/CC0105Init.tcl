@@ -27,3 +27,9 @@ puts "Initializing trigger ULM2367 module FPGA."
 initTrigger2367 $CCUSB 17 $trigger(configuration)
 
 puts "Done."
+
+
+
+
+
+

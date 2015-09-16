@@ -46,6 +46,8 @@
 #define PACKET_S800 0x5800
 #define VERSION_S800 0x0005
 
+#define PACKET_BAD 0x6666
+
 #define PACKET_TIMESTAMP 0x5803
 #define PACKET_EVENT_NUMBER 0x5804
 #define PACKET_TRIGGER 0x5801
@@ -229,7 +231,8 @@ struct EventType
   uint16_t trigger_pattern;
   uint16_t fera[16];
 
-  uint16_t phillips[6][17]; // 0: Ion chamber ADC, 1: hodoscope 1-16 ADC, 2: hodoscope 17-32 ADC, 3: S800 CRDC's anodes + TACs, 4: S800 TDC, 5: LaBr TDC
+  uint16_t phillips[6][17]; // 0: Ion chamber ADC, 1: hodoscope 1-16 ADC, 2: hodoscope 17-32 ADC, 
+                            // 3: S800 CRDC's anodes + TACs, 4: S800 TDC, 5: LaBr TDC
   struct pad_type det_pads[3][MAXPADS]; //0: CRDC1, 1: CRDC2, 2: PPACs
   uint32_t npads[3]; //0: CRDC1, 1: CRDC2, 2: PPACs
   uint16_t tdc[17];
@@ -238,7 +241,7 @@ struct EventType
   struct mesytecTDC_type mtdc;
   uint16_t timestamp_bit[2][NTSWORDS]; // 0: timestamp from VM-USB, 1: timestamp from CC-USB
   uint64_t timestamp[2];               // 0: timestamp from VM-USB, 1: timestamp from CC-USB
-  uint16_t evnum_bit[2][NEVNUMWORDS]; // 0: event number from VM-USB, 1: event number from CC-USB
+  uint16_t evnum_bit[2][NEVNUMWORDS];  // 0: event number from VM-USB, 1: event number from CC-USB
   uint64_t evnum;
 
   
@@ -253,9 +256,9 @@ class CS800Filter : public CFilter
 {
     private:
        bool m_isBuilt;
-       bool m_ulm24;
-       bool m_phillips24;
-       bool m_register24;
+       bool m_ulm24;       // Variable to en(dis)able working in 24-bit format
+       bool m_phillips24;  // Variable to en(dis)able working in 24-bit format
+       bool m_register24;  // Variable to en(dis)able working in 24-bit format
        std::map<uint16_t,std::vector<uint16_t> > m_sortedData;
        std::map<uint16_t,bool> m_found; // Map to keep track of tags found
        int m_eventCount;
@@ -272,13 +275,18 @@ class CS800Filter : public CFilter
     
        virtual CRingItem* handlePhysicsEventItem(CPhysicsEventItem* item);
        virtual CRingItem* handleScalerItem(CRingScalerItem* item);
+       virtual CRingItem* handleStateChangeItem(CRingStateChangeItem* item);
        
        void setBuiltFlag(bool isbuilt) { m_isBuilt = isbuilt; } 
        void setULMIs24Bit(bool is24Bit) { m_ulm24 = is24Bit; }
        void setPhillipsIs24Bit(bool is24Bit) { m_phillips24 = is24Bit; }
        void setRegisterIs24Bit(bool is24Bit) { m_register24 = is24Bit; }
 
+       virtual void initialize();
        virtual void finalize();
+
+       void resetCounters();
+       void printCounterSummary();
 
 
 
@@ -295,6 +303,7 @@ class CS800Filter : public CFilter
        void FormatData(int status, EventType* pEvent);
        void PublishData(CRingItem* item);
        uint16_t* appendKeyedData(uint16_t* pData, uint16_t keyoverwrite, uint16_t key);
+       void PublishCorruptedData(CRingItem* item);
        
        
        //int parseData(CRingItem* item);

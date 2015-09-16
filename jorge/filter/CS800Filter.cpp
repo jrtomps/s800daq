@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <cassert>
 #include <limits>
 
 #include <FragmentIndex.h>
@@ -46,28 +47,28 @@
 : trigger_pattern(0), 
   mtdc(), 
   evnum(0)
-{
-  std::fill(fera, fera+sizeof(fera)/sizeof(uint16_t), 0); 
+  {
+    std::fill(fera, fera+sizeof(fera)/sizeof(uint16_t), 0); 
 
-  for (size_t i=0; i<6; ++i) {
-    std::fill(phillips[i], phillips[i]+17, 0);
+    for (size_t i=0; i<6; ++i) {
+      std::fill(phillips[i], phillips[i]+17, 0);
+    }
+
+    // no need to initialize pads b/c the data is compressed in the 
+    // lower indices of the array and we only deal with that data
+
+    std::fill(npads,   npads+sizeof(npads)/sizeof(uint32_t), 0);
+    std::fill(tdc,     tdc+sizeof(tdc)/sizeof(uint16_t), 0);
+    std::fill(labrtdc, labrtdc+sizeof(labrtdc)/sizeof(uint16_t), 0);
+    std::fill(coinc,   coinc+sizeof(coinc)/sizeof(uint16_t), 0);
+    
+    std::fill(timestamp_bit[0], timestamp_bit[0]+NTSWORDS, 0);
+    std::fill(timestamp_bit[1], timestamp_bit[1]+NTSWORDS, 0);
+    std::fill(timestamp,    timestamp+2, 0);
+    std::fill(evnum_bit[0], evnum_bit[0]+NEVNUMWORDS, 0);
+    std::fill(evnum_bit[1], evnum_bit[1]+NEVNUMWORDS, 0);
+    
   }
-
-  // no need to initialize pads b/c the data is compressed in the 
-  // lower indices of the array and we only deal with that data
-
-  std::fill(npads,   npads+sizeof(npads)/sizeof(uint32_t), 0);
-  std::fill(tdc,     tdc+sizeof(tdc)/sizeof(uint16_t), 0);
-  std::fill(labrtdc, labrtdc+sizeof(labrtdc)/sizeof(uint16_t), 0);
-  std::fill(coinc,   coinc+sizeof(coinc)/sizeof(uint16_t), 0);
-
-  std::fill(timestamp_bit[0], timestamp_bit[0]+NTSWORDS, 0);
-  std::fill(timestamp_bit[1], timestamp_bit[1]+NTSWORDS, 0);
-  std::fill(timestamp,    timestamp+2, 0);
-  std::fill(evnum_bit[0], evnum_bit[0]+NEVNUMWORDS, 0);
-  std::fill(evnum_bit[1], evnum_bit[1]+NEVNUMWORDS, 0);
-
-}
 
 
   CS800Filter::CS800Filter(bool isbuilt) 
@@ -141,7 +142,6 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 
   ++m_eventCount; // update the event count
 
-
   uint32_t sid[MAXNF] = {0,0,0,0,0,0,0,0,0,0};
 
 
@@ -181,16 +181,14 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 
 	/* Check for repeated source IDs**************************************/ 
 	j = i-1;
-	while(j>=0) {
+	while(j >= 0) {
 	  if (id == sid[j]) {
 	    //std::cerr << "*** ERROR: Different fragments have same source ID!!!!!!!" << std::endl;
-
-
 	    std::stringstream msg;
 	    msg << " *** ERROR:  Different fragments have same source ID!!!!!!!";
 	    Actions::Error ( msg.str() ); 
-
 	    m_error[3] += 1; // Repeated source ID
+	    goodstatus = false;
 	    break;
 	  }
 	  j--;
@@ -207,8 +205,8 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 	  std::stringstream msg;
 	  msg << " *** ERROR:  Timestamp = 0 !!!!!!!";
 	  Actions::Error ( msg.str() ); 
-
 	  m_error[4] += 1; // Corrupted timestamp = 0 
+	  goodstatus = false;
 	  //break;
 	  
 	} else if (tstamp < earliest) {
@@ -220,9 +218,8 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 	  std::stringstream msg;
 	  msg << " *** ERROR: Uncorrelated fragments (different timestamps) !!!!!!! ";
 	  Actions::Error ( msg.str() ); 
-
-
 	  m_error[5] += 1; // Uncorrelated fragments (different timestamps) 
+	  goodstatus = false;
 	  //break;
 	}
 	
@@ -259,8 +256,6 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 	std::stringstream msg;
 	msg << " *** ERROR: Ew !!! A head-less ITEM !!!!!!! ";
 	Actions::Error ( msg.str() ); 
-
-
         m_error[2] += 1; // Fragment has no header
         goodstatus = false;
 
@@ -273,6 +268,11 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 
 
     }  ////////// End while-loop over fragments within EVB 
+
+
+
+
+
 
 
   } else {
@@ -311,17 +311,44 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 
 
 
-
-
-
-  FormatData(status, &event); // Format and pack data
-
-
   publish = new CPhysicsEventItem(event.timestamp[0], 2, 0, maxBody); // Create new ring item 
-  PublishData(publish); // Publish new ring item
 
 
-  } catch (std::exception& exc) { std::stringstream msg;
+
+  //if (goodstatus) { // If we had a good ringitem
+
+    FormatData(status, &event); // Format and pack data
+    PublishData(publish); // Publish new ring item
+
+    //} else { //...otherwise
+
+    //PublishCorruptedData(publish); // Publish new ring item with bad data
+
+    //}
+
+
+
+
+
+  //if (!goodstatus) { 
+  // if ( (m_error[1] == 0) || (m_error[1] > 1) ) {
+
+  //    std::stringstream msg;
+  //	msg << "******* FATAL ERROR stops the run!!!!!: ";	
+  //	Actions::Error(msg.str());
+  //	Actions::EndRun(true);
+  //}
+  //}
+
+
+
+
+
+
+
+
+  } catch (std::exception& exc) { 
+        std::stringstream msg;
 	msg << "Caught a std::exception in event handler: " << exc.what();	
 	Actions::Error(msg.str());
 	Actions::EndRun();
@@ -389,8 +416,6 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
     std::stringstream msg;
     msg << " *** ERROR: Bad word counting!!!!!!!";
     Actions::Error ( msg.str() ); 
-
-
 
     m_error[6] += 1; // Value of body size taken from body disagrees with value taken from header   
 
@@ -503,6 +528,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
 
             int timeflag = 0; // Timestamp flag = XLM
             uint16_t* p_time1 = DecodeXLMTimestamp(pData, pEvent, timeflag, status);
+	    if (status != 0) return status;
 
             readWords = p_time1 - pData;
             //std::cout << "Read XLM timestamp uint16_t words: :"  << std::dec << readWords << std::endl;
@@ -561,6 +587,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
 
             int det = 0; // PAD detector flag = CRDC1
             uint16_t* p_crdc1 = DecodeXLMpads(pData, pEvent, det, status);
+	    if (status != 0) return status;
 
             readWords = p_crdc1 - pData;
             //std::cout << "Read CRDC1 uint16_t words: :"  << std::dec << readWords << std::endl;
@@ -577,7 +604,6 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             status = 1;
             return status;
           }
-
 
           endsubpacket = *pData++; 
           wCounter++;
@@ -606,6 +632,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
 
             int det = 1; // PAD detector flag = CRDC2
             uint16_t* p_crdc2 = DecodeXLMpads(pData, pEvent, det, status);
+	    if (status != 0) return status;
 
             readWords = p_crdc2 - pData;
             //std::cout << "Read CRDC2 uint16_t words: :"  << std::dec << readWords << std::endl;
@@ -652,6 +679,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
 
             int det = 2; // PAD detector flag = PPAC
             uint16_t* p_ppac = DecodeXLMpads(pData, pEvent, det, status);
+	    if (status != 0) return status;
 
             readWords = p_ppac - pData;
             //std::cout << "Read PPAC uint16_t words: :"  << std::dec << readWords << std::endl;
@@ -696,6 +724,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             //std::cout << "Decoding Mesytec TDC:"  << std::hex << subpacket << std::endl;
 
             uint16_t* p_mtdc = DecodeMTDC(pData, pEvent, status);
+	    if (status != 0) return status;
 
             readWords = p_mtdc - pData;
             //std::cout << "Read Mesytec TDC uint16_t words: :"  << std::dec << readWords << std::endl;
@@ -750,6 +779,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
 
             int timeflag = 1; // Timestamp flag = ULM
             uint16_t* p_time2 = DecodeULMTimestamp(pData, pEvent, timeflag, status);
+	    if (status != 0) return status;
 
             readWords = p_time2 - pData;
             //std::cout << "Read ULM timestamp uint16_t words: :"  << std::dec << readWords << std::endl;
@@ -808,6 +838,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             //std::cout << "Decoding FERA ADC:"  << std::hex << subpacket << std::endl;
 
             uint16_t* p_fera = DecodeFERAADC(pData, pEvent, status);
+	    if (status != 0) return status;
 
             readWords = p_fera - pData;
             //std::cout << "Read FERA uint16_t words: :"  << std::dec << readWords << std::endl;
@@ -855,6 +886,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             int phillipsflag = 0; // phillipsflag = ION CHAMBER
 
             uint16_t* p_PADC1 = DecodePhillips(pData, pEvent, phillipsflag, status);
+	    if (status != 0) return status;
 
             readWords = p_PADC1 - pData;
             //std::cout << "Read Phillips ADC Ion Chamber uint16_t words: :"  << std::dec << readWords << std::endl;
@@ -954,6 +986,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             int phillipsflag = 1; // phillipsflag = Hodoscope 1
 
             uint16_t* p_PADC2 = DecodePhillips(pData, pEvent, phillipsflag, status);
+	    if (status != 0) return status;
 
             readWords = p_PADC2 - pData;
             //std::cout << "Read Phillips ADC Hodoscope 1 uint16_t words: :"  << std::dec << readWords << std::endl;
@@ -1002,6 +1035,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             int phillipsflag = 2; // phillipsflag = Hodoscope 2
 
             uint16_t* p_PADC3 = DecodePhillips(pData, pEvent, phillipsflag, status);
+	    if (status != 0) return status;
 
             readWords = p_PADC3 - pData;
             //std::cout << "Read Phillips ADC Hodoscope 2 uint16_t words: :"  << std::dec << readWords << std::endl;
@@ -1052,6 +1086,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             int phillipsflag = 3; // phillipsflag = S800 ADC
 
             uint16_t* p_PADC4 = DecodePhillips(pData, pEvent, phillipsflag, status);
+	    if (status != 0) return status;
 
             readWords = p_PADC4- pData;
             //std::cout << "Read Phillips S800 ADC uint16_t words: :"  << std::dec << readWords << std::endl;
@@ -1099,6 +1134,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             int phillipsflag = 4; // phillipsflag = S800 TDC
 
             uint16_t* p_PTDC = DecodePhillips(pData, pEvent, phillipsflag, status);
+	    if (status != 0) return status;
 
             readWords = p_PTDC- pData;
             //std::cout << "Read Phillips S800 TDC uint16_t words: :"  << std::dec << readWords << std::endl;
@@ -1152,6 +1188,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
             int phillipsflag = 5; // phillipsflag = LaBr TDC
 
             uint16_t* p_PLaBr = DecodePhillips(pData, pEvent, phillipsflag, status);
+	    if (status != 0) return status;
 
             readWords = p_PLaBr- pData;
             //std::cout << "Read Phillips LaBr TDC uint16_t words: :"  << std::dec << readWords << std::endl;
@@ -1328,6 +1365,7 @@ uint16_t*  CS800Filter::DecodeXLMpads(uint16_t* pPaddata, EventType* pPad, int d
     std::stringstream msg;
     msg << " *** ERROR: Unknown pad detector!!!!!!!";
     Actions::Error ( msg.str() ); 
+    m_error[13] += 1;
     status = 1;
     return pPaddata;
   }
@@ -1345,8 +1383,8 @@ uint16_t*  CS800Filter::DecodeXLMpads(uint16_t* pPaddata, EventType* pPad, int d
     std::stringstream msg;
     msg << " *** ERROR: too many pads!!!!!!!";
     Actions::Error ( msg.str() ); 
+    m_error[14] += 1;
     status = 1;
-
     return pPaddata;
 
   }
@@ -1409,6 +1447,7 @@ uint16_t*  CS800Filter::DecodeMTDC(uint16_t* pMTDCdata, EventType* pMTDC, int st
     std::stringstream msg;
     msg << " *** ERROR: too many channels seen for mesytec TDC !!!! ";
     Actions::Error ( msg.str() ); 
+    m_error[15] += 1;
     status = 1;
     return pMTDCdata;
   }
@@ -1499,7 +1538,10 @@ uint16_t*  CS800Filter::DecodePhillips(uint16_t* pPhillipsdata, EventType* pPhil
 }
 
 
-
+/********************************************************************************************************/
+/* Function FormatData takes event-structure pointer pEvent and uses it to create a map (m_sortedData)  */
+/* with the re-formatted data to be published                                                           */
+/********************************************************************************************************/
 void CS800Filter::FormatData(int status, EventType* pEvent) 
 {
 
@@ -1872,9 +1914,6 @@ void CS800Filter::PublishData(CRingItem* item)
   //}
 
 
-
-
-
 }
 
 
@@ -1921,11 +1960,88 @@ uint16_t* CS800Filter::appendKeyedData(uint16_t* pData, uint16_t keyoverwrite, u
 
 
 
-void CS800Filter::finalize() 
+
+
+
+
+
+void CS800Filter::PublishCorruptedData(CRingItem* item)
+{
+
+  uint16_t* pData = reinterpret_cast<uint16_t*>(item->getBodyPointer());
+
+  uint16_t* pStart = reinterpret_cast<uint16_t*>(pData); // Create room for total inclusive buffer size
+  pData++;
+
+  uint16_t* pPktStart = reinterpret_cast<uint16_t*>(pData); // Create room for total inclusive packet size
+  pData++;
+
+  *pData++ = PACKET_BAD; // Insert Bad-packet tag where S800 tag should go
+
+
+  // Compute the final size and set it
+  *pStart = static_cast<uint16_t>(pData - pStart);
+  *pPktStart = static_cast<uint16_t>(pData - pPktStart);
+
+
+  item->setBodyCursor(pData);
+  item->updateSize();
+
+
+  uint16_t* readData = reinterpret_cast<uint16_t*>(item->getBodyPointer());
+  size_t bsize = item->getBodySize()/sizeof(uint16_t); // Fragment body size (just body)
+
+  int nwords = bsize-1;
+  //while (nwords>0) {
+  //  std::cout << "Buffer element: " << std::hex << *readData++ << ". Words left: " << std::dec << nwords << std::endl;
+  //  nwords--;
+  //}
+
+
+}
+
+CRingItem* CS800Filter::handleStateChangeItem(CRingStateChangeItem* pItem)
+{
+	assert(pItem);
+
+	if (pItem->type() == BEGIN_RUN) {
+		resetCounters();
+	} else if (pItem->type() == END_RUN) {
+		printCounterSummary();
+	}	
+
+	return pItem;
+}
+
+
+void CS800Filter::resetCounters()
+{
+  m_eventCount = 0;
+
+  m_error[1] = 0;
+  m_error[2] = 0;
+  m_error[3] = 0;
+  m_error[4] = 0;
+  m_error[5] = 0;
+  m_error[6] = 0;
+  m_error[7] = 0;
+  m_error[8] = 0;
+  m_error[9] = 0;
+  m_error[10] = 0;
+  m_error[11] = 0;
+  m_error[12] = 0;
+  m_error[13] = 0;
+  m_error[14] = 0;
+  m_error[15] = 0;
+
+  std::stringstream msg;
+  msg << " SET ERROR COUNTERS TO ZERO";
+  Actions::Log ( msg.str() ); 
+}
+
+void CS800Filter::printCounterSummary()
 {
   std::cout << "\nERROR COUNTER RESULTS" << std::endl;
-
-
 
   std::cout << "ERROR 1. Number of fragments in RingItem is not 2:                           " << m_error[1] << std::endl;
   std::cout << "ERROR 2. Fragment with no head:                                              " << m_error[2] << std::endl;
@@ -1939,14 +2055,22 @@ void CS800Filter::finalize()
   std::cout << "ERROR 10. Incomplete RingItem (missing packet tags):                         " << m_error[10] << std::endl;
   std::cout << "ERROR 11. Unknown word found in fragment body:                               " << m_error[11] << std::endl;
   std::cout << "ERROR 12. Unknown controller type:                                           " << m_error[12] << std::endl;
+  std::cout << "ERROR 13. Unknown PAD detector type:                                         " << m_error[13] << std::endl;
+  std::cout << "ERROR 14. Too many pads in PAD detector:                                     " << m_error[14] << std::endl;
+  std::cout << "ERROR 15. Too many MTDC channels:                                            " << m_error[15] << std::endl;
   std::cout << "\nTOTAL NUMBER OF EVENTS:                                                    " << m_eventCount << std::endl;
 
-
   std::cout << "----------------------------------------" << std::endl;
+
 }
 
+void CS800Filter::initialize() 
+{
+}
 
-
+void CS800Filter::finalize() 
+{
+}
 
 CRingItem* CS800Filter::handleScalerItem(CRingScalerItem* item) {
   
@@ -2023,3 +2147,11 @@ CRingItem* CS800Filter::handleScalerItem(CRingScalerItem* item) {
   }
   return product;
 }
+
+
+
+
+
+
+
+

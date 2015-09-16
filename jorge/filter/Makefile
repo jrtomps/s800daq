@@ -1,4 +1,4 @@
-INSTDIR=/usr/opt/nscldaq/11.0-007
+INSTDIR=${DAQROOT}
 
 include $(INSTDIR)/filterkit/FilterIncludes
 

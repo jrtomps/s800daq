@@ -27,6 +27,7 @@ namespace eval ActionFilter {
   proc leave {from to} {
     if {($from eq "Halted") && ($to eq "Active")} {
       startFilter
+#      exec xterm -e /user/s800/converged_daq/jorge/filter/launchFilter &
     }
 
   }

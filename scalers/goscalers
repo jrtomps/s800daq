@@ -1,4 +1,5 @@
 #!/bin/bash
 
-export SCALER_RING="tcp://localhost/s800filter"
+#export SCALER_RING="tcp://localhost/s800filter"
+export SCALER_RING="tcp://spdaq19.nscl.msu.edu/s800filter"
 $DAQBIN/ScalerDisplay s800scalers.def

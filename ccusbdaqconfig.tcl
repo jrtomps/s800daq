@@ -44,6 +44,7 @@ ccusb config ctlr -out1 busy
 ccusb config ctlr -out2 event
 ccusb config ctlr -out3 busyend
 ccusb config ctlr -scalera event -scalerb carrya ;# Set Input of scaler A to event, scaler B to term of scaler A,
+ccusb config ctlr -printconfig on
 
 
 
@@ -62,20 +63,25 @@ addtcldriver rdoScript
 
 #################
 # The script that sets the trigger Go bit to 1 at run start
-# and also sets it to 0 at the end of the run
-readoutscript startStopScript -controllertype ccusb
-startStopScript configure -initscript Scripts/MainBegin.tcl
-startStopScript configure -onendscript Scripts/MainEnd.tcl
-addtcldriver startStopScript
+readoutscript startScript -controllertype ccusb
+startScript configure -initscript Scripts/MainBegin.tcl
+addtcldriver startScript
 
+
+#################
+# The script that sets the trigger Go bit to 0 at run end
+readoutscript stopScript -controllertype ccusb
+stopScript configure -onendscript Scripts/MainEnd.tcl
+addtcldriver stopScript
 
 
 ##########################################################################################
 # -- Define stack to include all CAMAC modules (Trigger, ADCs, TDC, CC-USB controller)
-set rdoModules [list crateTag \
+set rdoModules [list stopScript \
+		     crateTag \
                      ctlr \
 	             rdoScript \
-		     startStopScript ]
+		     startScript ]
 
 
 
