@@ -16,24 +16,33 @@ ActionFilter::register
 
 RemoteControlClient::initialize
 
+set ::ulmGUIWindow ""
 proc launchULMGUI {} {
-    exec $::env(DAQBIN)/ULMTriggerGUI --slot 17 --port 27001 --host localhost --module remoteCCUSBHandler --ring rawccusb &
+    exec $::env(DAQBIN)/ULMTriggerGUI --slot 17 \
+		--port 27001 \
+		--host localhost \
+		--module remoteCCUSBHandler \
+		--ring rawccusb \
+		--configfile /user/s800/operations/daq/usb/Configs/s800trigger.tcl &
 }
 
 proc createULMLauncher {} {
-	ttk::frame .ulmFrame
-	ttk::button .ulmFrame.launchBtn -text "Launch ULM GUI" -command launchULMGUI
+	if { $::ulmGUIWindow eq {}} {
+		set ::ulmGUIWindow .ulmFrame
+		ttk::frame $::ulmGUIWindow
+		ttk::button $::ulmGUIWindow.launchBtn -text "Launch ULM GUI" -command launchULMGUI
 
-	grid .ulmFrame.launchBtn -sticky nsew
-	grid rowconfigure .ulmFrame 0 -weight 1
-	grid columnconfigure .ulmFrame 0 -weight 1
+		grid $::ulmGUIWindow.launchBtn -sticky nsew
+		grid rowconfigure .ulmFrame 0 -weight 1
+		grid columnconfigure .ulmFrame 0 -weight 1
 
-	set dimensions [grid size .]
-	set rows [lindex $dimensions 1]
-	set cols [lindex $dimensions 0]
-	incr rows
+		set dimensions [grid size .]
+		set rows [lindex $dimensions 1]
+		set cols [lindex $dimensions 0]
+		incr rows
 
-	grid .ulmFrame -row $rows -column 0 -columnspan $cols -sticky nsew -padx 5 -pady 3
+		grid $::ulmGUIWindow -row $rows -column 0 -columnspan $cols -sticky nsew -padx 5 -pady 3
+	}
 }
 
 proc OnStart {} {
