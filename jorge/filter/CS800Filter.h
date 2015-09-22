@@ -164,7 +164,7 @@ const int S800_TOF_FIRST=12;
 const int S800_TOF_CHANNELS=4;
 
 const int S800_FP_SCINT_FIRST=0;
-const int S800_FP_SCINT_CHANNELS=3;
+const int S800_FP_SCINT_CHANNELS=2;
 
 const int S800_FP_IC_FIRST=0;
 const int S800_FP_IC_CHANNELS=16;

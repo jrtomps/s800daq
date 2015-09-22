@@ -1597,11 +1597,11 @@ void CS800Filter::FormatData(int status, EventType* pEvent)
     }
   }
   time = 0;
-  time = pEvent->phillips[3][7+1]; // ToF TAC (CRDC anode) from S800 ADC
+  time = pEvent->phillips[3][7+1]; // ToF TAC (XF_SCI) from S800 ADC
   time |= 4<<12;
   m_sortedData[PACKET_TOF].push_back(time); 
   time = 0;
-  time = pEvent->phillips[3][8+1]; // ToF TAC (CRDC anode) from S800 ADC
+  time = pEvent->phillips[3][8+1]; // ToF TAC (OBJ_SCI) from S800 ADC
   time |= 5<<12;
   m_sortedData[PACKET_TOF].push_back(time); 
 
@@ -1612,9 +1612,9 @@ void CS800Filter::FormatData(int status, EventType* pEvent)
     energy = pEvent->fera[i];
     time = pEvent->phillips[4][i+1];
 
-    if (energy > 0 || i == 2) { // added to ensure we always see delayed E1 up 
-      energy |= i<<12;
-      time |= i<<12;
+    if (energy > 0 || i == 2) { // added to ensure we always see delayed E1 up. 
+      energy |= i<<12;          // In the current version, there is nothing in TDC channel i=2
+      time |= i<<12;            // However, I keep it to be consistent with old data. JP 9/17/2015
       m_sortedData[PACKET_FP_SCINT].push_back(energy); 
       m_sortedData[PACKET_FP_SCINT].push_back(time); 
     }
