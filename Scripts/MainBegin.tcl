@@ -3,7 +3,7 @@
 set CCUSB $::Globals::aController
 
 # Module declarations
-if {[lsearch [itcl::find objects] trigger] == -1} {ATrigger2367 trigger $CCUSB 20}
+if {[lsearch [itcl::find objects] trigger] == -1} {ATrigger2367 trigger $CCUSB 17}
 
 ## Choose whether or not to send slow control buffers
 #global runinfo
