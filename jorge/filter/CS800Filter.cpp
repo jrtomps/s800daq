@@ -406,7 +406,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
   temp16 = *pData++; // First 16-bit word
   nWords = temp16 & 0xfff; // Number of 16-bit words (self-exclusive) (bits 0 to 11)
   int cbit = temp16 & 0x1000; // Continuation bit (bit 12) [CHECK WITH SCOTT]
-  int stackid = temp16 & 0x2000; // Continuation bit (bit 13) [CHECK WITH SCOTT]
+  int stackid = temp16 & 0x2000; // Stack ID (bit 13) [CHECK WITH SCOTT]
 
   //std::cout << "Body Size: " << std::dec << bsize << std::endl;
   //std::cout << "Words: " << std::dec << nWords << std::endl;
@@ -1452,7 +1452,7 @@ uint16_t*  CS800Filter::DecodeMTDC(uint16_t* pMTDCdata, EventType* pMTDC, int st
     return pMTDCdata;
   }
 
-//  for (i=0; i < 32; i++) pMTDC->mtdc.hits[i] = 0; // Init hit counts to zero
+  for (i=0; i < 32; i++) pMTDC->mtdc.hits[i] = 0; // Init hit counts to zero
 
   for (i=0; i < pMTDC->mtdc.header.nwords-1; i++) {
     temp16 = *pMTDCdata++;
@@ -2074,7 +2074,7 @@ void CS800Filter::finalize()
 
 CRingItem* CS800Filter::handleScalerItem(CRingScalerItem* item) {
   
-  ++m_eventCount;
+  //++m_eventCount;
   
   int i;
   int offset = 1;

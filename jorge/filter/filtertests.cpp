@@ -32,6 +32,54 @@ std::ostream& operator<<(std::ostream& stream, const std::vector<T>& vec) {
 }
 
 
+template<class T>
+void print_vectors(const std::vector<T>& expected, const std::vector<T>& actual)
+{
+    size_t max = std::max(expected.size(), actual.size());
+    for (size_t index=0; index<max; ++index) {
+        std::cout << setw(4) << index << " : ";
+
+        std::cout << std::hex;
+        std::cout << "0x";
+        if (index < expected.size() ) {
+		cout << setfill('0');
+		cout << setw(4) << expected.at(index);
+        } else {
+		cout << setfill(' ');
+		cout << setw(4) << " ";
+        }
+
+	cout << "  ";
+
+        if (index < actual.size() ) {
+                cout << "0x";
+		cout << setfill('0');
+		cout << setw(4) << actual.at(index);
+        } else {
+		cout << setfill(' ');
+		cout << setw(4) << " ";
+	} 
+        cout << std::dec;
+	cout << "\n";
+    } 
+
+    cout << endl;
+
+}
+
+std::vector<std::uint16_t> itemToVector(CRingItem* pItem)
+{
+	std::vector<uint16_t> data;
+	uint16_t* pData = reinterpret_cast<uint16_t*>(pItem->getItemPointer());
+
+	size_t nShorts = (*pData)/sizeof(uint16_t);
+	data.reserve(nShorts);
+	data.insert(data.end(), pData, pData+nShorts);
+	
+	return data;
+}
+
+
 class S800FilterTest : public CppUnit::TestFixture 
 {
   CPPUNIT_TEST_SUITE(S800FilterTest);
@@ -74,6 +122,7 @@ class S800FilterTest : public CppUnit::TestFixture
     size_t   nExpectedBytes = pResultItem->getBodySize() + sizeof(BodyHeader) + sizeof(RingItemHeader);
     uint8_t* pFiltBytes = reinterpret_cast<uint8_t*>(pFiltered->getItemPointer());
     size_t   nFilteredBytes = pFiltered->getBodySize() + sizeof(BodyHeader) + sizeof(RingItemHeader);
+
 
     size_t nToCompare = min(nExpectedBytes, nFilteredBytes);
     CPPUNIT_ASSERT_MESSAGE(
