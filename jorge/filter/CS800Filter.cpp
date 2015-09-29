@@ -79,7 +79,12 @@
   m_sortedData(), 
   m_found(),
   m_eventCount(0),
+  m_prevtstampvmusb(0),
+  m_prevtstampccusb(0),
+  m_prevevnum(0),
   m_eventCountLastError(0),
+  m_BOR(false),
+  m_EOR(false),
   m_error()
 {}
 
@@ -92,7 +97,12 @@
   m_sortedData(rhs.m_sortedData),
   m_found(rhs.m_found),
   m_eventCount(rhs.m_eventCount),
+  m_prevtstampvmusb(rhs.m_prevtstampvmusb),
+  m_prevtstampccusb(rhs.m_prevtstampccusb),
+  m_prevevnum(rhs.m_prevevnum),
   m_eventCountLastError(rhs.m_eventCountLastError),
+  m_BOR(rhs.m_BOR),
+  m_EOR(rhs.m_EOR),
   m_error(rhs.m_error)
 {}
 
@@ -105,8 +115,13 @@ CS800Filter& CS800Filter::operator=(const CS800Filter& rhs)
             m_register24 = rhs.m_register24,
             m_sortedData = rhs.m_sortedData;
     m_found = rhs.m_found,
-            m_eventCount = rhs.m_eventCount;
+      m_eventCount = rhs.m_eventCount;
+    m_prevtstampvmusb = rhs.m_prevtstampvmusb;
+    m_prevtstampccusb = rhs.m_prevtstampccusb;
+    m_prevevnum = rhs.m_prevevnum;
     m_eventCountLastError = rhs.m_eventCountLastError;
+    m_BOR = rhs.m_BOR;
+    m_EOR = rhs.m_EOR;
     m_error = rhs.m_error;
     CFilter::operator=(rhs);
   }
@@ -121,19 +136,18 @@ CS800Filter& CS800Filter::operator=(const CS800Filter& rhs)
 CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 {
   bool goodstatus = true; 
+ 
 
   int status = 0;
 
   int i,j;
-
-  bool id0 = false;
-  bool id1 = false;
 
   size_t maxBody = 8192;
 
   uint16_t control = 0;
 
   uint16_t* pBody = nullptr; // pBody will point to fragment body
+  uint16_t* pTBody = nullptr; // pTBody will point to fragment body
 
 //  EventType* event = nullptr; // event will point to EventType structure (defined in header)
 
@@ -144,7 +158,7 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 
   uint32_t sid[MAXNF] = {0,0,0,0,0,0,0,0,0,0};
 
-
+ 
   try {
 
   FragmentIndex index(reinterpret_cast<uint16_t*>(pItem->getBodyPointer())); 
@@ -152,7 +166,7 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 
 
 
-//  event = new EventType(); //event will collect data from modules
+  //  event = new EventType(); //event will collect data from modules
   EventType event; //event will collect data from modules
 
   
@@ -160,13 +174,29 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 
   if (NF == 2) { // Number of fragments in Item MUST BE 2 (VM-USB and CC-USB)
 
-
     uint64_t earliest = std::numeric_limits<uint64_t>::max();
     i = 0;
 
     FragmentIndex::iterator it = index.begin();
     FragmentIndex::iterator itend = index.end();
 
+
+	
+    m_found[XLM_TIMESTAMP_TAG] = false;
+    m_found[XLM_CRDC1_TAG] = false;
+    m_found[XLM_CRDC2_TAG] = false;
+    m_found[XLM_PPAC_TAG] = false;
+    m_found[MTDC_TAG] = false;
+    m_found[ULM_TAG] = false;
+    m_found[FERA_TAG] = false;
+    m_found[PHILLIPS_ADC_IONCHAMBER_TAG] = false;
+    m_found[REGISTER_TAG] = false;
+    m_found[PHILLIPS_ADC_HODOSCOPE1_TAG] = false;
+    m_found[PHILLIPS_ADC_HODOSCOPE2_TAG] = false;
+    m_found[PHILLIPS_ADC_S800_TAG] = false;
+    m_found[PHILLIPS_TDC_S800_TAG] = false;
+    //m_found[PHILLIPS_TDC_LABR_TAG] = false;
+    
 
     while ( (it != itend) && (goodstatus) ) { // Read fragments within EVB ringitem //////////////////////
 
@@ -195,8 +225,6 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 	}
 	sid[i] = id;
 	i++;
-
-
 
 	/* Check timestamps *************************************************/ 
 	if (tstamp == 0) {
@@ -229,24 +257,10 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 	//std::cout << "Size total: " << std::dec << size << ", body: " << bsize << std::endl;
 	//std::cout << "Timestamp: " << std::dec << tstamp << std::endl;
 	
-	m_found[XLM_TIMESTAMP_TAG] = false;
-	m_found[XLM_CRDC1_TAG] = false;
-	m_found[XLM_CRDC2_TAG] = false;
-	m_found[XLM_PPAC_TAG] = false;
-	m_found[MTDC_TAG] = false;
-	m_found[ULM_TAG] = false;
-	m_found[FERA_TAG] = false;
-	m_found[PHILLIPS_ADC_IONCHAMBER_TAG] = false;
-	m_found[REGISTER_TAG] = false;
-	m_found[PHILLIPS_ADC_HODOSCOPE1_TAG] = false;
-	m_found[PHILLIPS_ADC_HODOSCOPE2_TAG] = false;
-	m_found[PHILLIPS_ADC_S800_TAG] = false;
-	m_found[PHILLIPS_TDC_S800_TAG] = false;
-	//m_found[PHILLIPS_TDC_LABR_TAG] = false;
-	
 
 	pBody = it->s_itembody; // Define pointer to data body 
-	status = parseData(id,bsize,tstamp,pBody,&event);
+	pTBody = it->s_itembody; // Define pointer to data body 
+	status = parseData(id,bsize,tstamp,pBody,pTBody,&event);
 	if (status != 0) goodstatus = false;
 
       } else {
@@ -270,18 +284,13 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
     }  ////////// End while-loop over fragments within EVB 
 
 
-
-
-
-
-
-  } else {
+  } else { // If number of fragments is not 2
 
     //std::cerr << " *** ERROR: Number of fragments is NOT 2 !!!!!!!" << std::endl;
     std::stringstream msg;
     msg << " *** ERROR: Number of fragments is NOT 2 !!!!!!!";
     Actions::Error ( msg.str() ); 
-
+    
     m_error[1] += 1; // Wrong number of fragments 
     goodstatus = false;
 
@@ -291,23 +300,16 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 
 
 
-
-  int ntrue = countTrue(m_found);
-  if (ntrue!=m_found.size()) {
-    //std::cerr << " *** ERROR: Incomplete RingItem !!!!!!!" << std::endl;
-    //std::stringstream msg;
-    //msg << " *** ERROR: Incomplete RingItem !!!";
-    //Actions::Error ( msg.str() ); 
-
-    m_error[10] += 1; // Incomplete RingItem
-    //    goodstatus = false;
-
-
-
-    //Actions::PauseRun();
-    //Actions::EndRun(true);
-
+  if (goodstatus) { // If event is good, check for missing packet tags
+    int ntrue = countTrue(m_found);
+    if (ntrue!=m_found.size()) {
+      std::stringstream msg;
+      msg << " *** ERROR: Incomplete RingItem !!!";
+      Actions::Error ( msg.str() ); 
+      m_error[10] += 1; // Incomplete RingItem
+    }
   }
+
 
 
 
@@ -350,16 +352,19 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
   } catch (std::exception& exc) { 
         std::stringstream msg;
 	msg << "Caught a std::exception in event handler: " << exc.what();	
+        msg << " Shutting down!";
 	Actions::Error(msg.str());
 	Actions::EndRun();
   } catch (CException& exc) {
 	std::stringstream msg;
 	msg << "Caught a CException in event handler: " << exc.ReasonText() << " while doing: " << exc.WasDoing();
+        msg << " Shutting down!";
 	Actions::Error(msg.str());
 	Actions::EndRun();
   } catch (std::string errmsg) {
 	std::stringstream msg;
 	msg << "Caught a string exception in event handler: " << errmsg;
+        msg << " Shutting down!";
 	Actions::Error(msg.str());
 	Actions::EndRun();
   } catch (...) {
@@ -375,77 +380,58 @@ CRingItem* CS800Filter::handlePhysicsEventItem(CPhysicsEventItem* pItem)
 
 
 
-int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t* pData, EventType* pEvent) 
+int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t* pRData, uint16_t* pData, EventType* pEvent) 
 { 
   int status = 0;
   int i;
 
-  uint16_t nWords=0,wCounter=0,readWords=0,tag;
+
+  uint16_t nWords=0, ntWords=0, wCounter=0,readWords=0,tag;
   uint16_t subpacket=0,endsubpacket=0; // Read sub-packet tag
 
-  //std::map<uint16_t,bool> found; // Map to keep track of tags found
-  //m_found[XLM_TIMESTAMP_TAG] = false;
-  //m_found[XLM_CRDC1_TAG] = false;
-  //m_found[XLM_CRDC2_TAG] = false;
-  //m_found[MTDC_TAG] = false;
-  //m_found[ULM_TAG] = false;
-  //m_found[FERA_TAG] = false;
-  //m_found[PHILLIPS_ADC_IONCHAMBER_TAG] = false;
-  //m_found[REGISTER_TAG] = false;
-  //m_found[PHILLIPS_ADC_HODOSCOPE1_TAG] = false;
-  //m_found[PHILLIPS_ADC_HODOSCOPE2_TAG] = false;
-  //m_found[PHILLIPS_ADC_S800_TAG] = false;
-  //m_found[PHILLIPS_TDC_S800_TAG] = false;
-  //m_found[PHILLIPS_TDC_LABR_TAG] = false;
-
+  bool display=false;
 
   uint16_t temp16;
   uint32_t temp32;
   uint64_t temp64;
 
-  temp16 = *pData++; // First 16-bit word
-  nWords = temp16 & 0xfff; // Number of 16-bit words (self-exclusive) (bits 0 to 11)
-  int cbit = temp16 & 0x1000; // Continuation bit (bit 12) [CHECK WITH SCOTT]
-  int stackid = temp16 & 0x2000; // Stack ID (bit 13) [CHECK WITH SCOTT]
 
-  //std::cout << "Body Size: " << std::dec << bsize << std::endl;
-  //std::cout << "Words: " << std::dec << nWords << std::endl;
 
-  if (nWords != (bsize-1) ) {
-    //std::cerr << "*** ERROR: Bad word counting!!!!!!!" << std::endl;
-    std::stringstream msg;
-    msg << " *** ERROR: Bad word counting!!!!!!!";
-    Actions::Error ( msg.str() ); 
+  /* VMUSB "splits" very long events in chunks of data. Each chunk is preceeded by a header  */
+  /* which includes the number of words in the chunck (bits 0 to 11); stack id (bit 13); and */
+  /* a continuation bit (bit 12). Whenever the later is set to 1, additional chunck(s) of    */
+  /* data follow the current one.                                                            */
+  /* In order to process the whole event (including all chuncks of data), we create a buffer */
+  /* data pointer (pData) which is re-filled with the content from pRData except the headers */
+  /* preceeding the chunk of data. JP 9/27/2015                                              */
+  int cbit = 0x1000;
+  int stackid;
+  while(cbit == 0x1000) {
+    
+    temp16 = *pRData++; // First header
 
-    m_error[6] += 1; // Value of body size taken from body disagrees with value taken from header   
+    ntWords = temp16 & 0xfff; // Number of 16-bit words (self-exclusive) (bits 0 to 11)
+    cbit = temp16 & 0x1000; // Continuation bit (bit 12) 
+    stackid = temp16 & 0x2000; // Stack ID (bit 13)    
 
-    status = 1;
-    return status;
+    nWords += ntWords; // Update the word counter with the value from the current chunk of data 
+    
+    for (i=0; i<ntWords; i++) { // Fill pData with the current chuck of data from pRData
+      *pData = *pRData;
+      pData++;
+      pRData++;
+    }
   }
-
-
-  //if (bsize == 46) {
-  //while (nWords > 0) {
-  //  std::cout << "Word: " << std::hex<< *pData++ << ". Left: " << std::dec << nWords << std::endl;
-  //  nWords--;
-  //}
-  //    std::stringstream msg;
-  //msg << " *** ERROR: Strange event ";
-  //Actions::Error ( msg.str() ); 
-  //Actions::PauseRun();
-  //Actions::EndRun(true);
-
-
-  //status = 1;
-  //return status;
-  //}
+  pData = pData - nWords; // Now move pData back to the beginning of the event buffer
+  
 
 
 
 
-
-
-
+  if (display) {
+    std::cout << "Body Size: " << std::dec << bsize << std::endl;
+    std::cout << "Words: " << std::dec << nWords << std::endl;
+  }
 
 
 
@@ -455,9 +441,10 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
   tag =  *pData++; // Controller tag
   wCounter++;
 
-  if (tag == VMUSB || tag == CCUSB ) { 
+  if (display) std::cout << "Controller tag: "  << std::hex << tag  << std::endl;
 
-    //std::cout << "Controller tag: "  << std::hex << tag  << std::endl;
+
+  if (tag == VMUSB || tag == CCUSB ) { 
 
 
     /* READ EVENT NUMBER *****************************************************************/
@@ -498,13 +485,27 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
       pEvent->evnum |= temp64 << 16;
       temp64 = pEvent->evnum_bit[0][2];
       pEvent->evnum |= temp64 << 32;
-      //std::cout << "Event number:  " << std::dec << pEvent->evnum  << std::endl;
+      if (display) std::cout << "Event number:  " << std::dec << pEvent->evnum  << std::endl;
+
+      if ( (m_prevevnum != 0) && ((pEvent->evnum - 1) != m_prevevnum) ) {
+	std::stringstream msg;
+	msg << " *** ERROR: Non-contiguous event number in VMUSB!!!! Previous: " << m_prevevnum << " Current: " << pEvent->evnum;
+	Actions::Error ( msg.str() ); 
+	m_error[16] += 1;   
+	status = 1;
+      } 
+      m_prevevnum = pEvent->evnum;
+      if (status != 0) return status;
+
+
+
+
     } else {
       pEvent->evnum = 0;
     }
 
 
-       std::map<uint16_t,uint16_t> m_error;
+    //std::map<uint16_t,uint16_t> m_error;
 
 
     /* SEARCH FOR SUBPACKET TAGS *****************************************************************/
@@ -513,6 +514,8 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
 
       subpacket = *pData++; // Read sub-packet tag
       wCounter++;
+
+      if (display) std::cout << "subpacket tag: "  << std::hex << subpacket << std::endl;
 
       switch(subpacket) {
 
@@ -543,8 +546,17 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
 	      Actions::Error ( msg.str() ); 
  	      m_error[9] += 1;
               status = 1;
-              return status;
             }
+
+	    if ( (m_prevtstampvmusb != 0) && (pEvent->timestamp[timeflag] <= m_prevtstampvmusb) ) {
+	      std::stringstream msg;
+	      msg << " *** ERROR: Non-increasing XLM timestamp!!!!!!!";
+	      Actions::Error ( msg.str() ); 
+	      m_error[17] += 1;   
+	      status = 1;
+	    } 
+	    m_prevtstampvmusb = pEvent->timestamp[timeflag];
+	    if (status != 0) return status;
 
           } else {
             //std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
@@ -560,7 +572,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           endsubpacket = *pData++; 
           wCounter++;
 
-          //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
+          if (display) std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != XLM_TIMESTAMP_ETAG) { // Check that we are at the end of the subpacket
             //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
@@ -608,7 +620,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           endsubpacket = *pData++; 
           wCounter++;
 
-          //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
+          if (display) std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != XLM_CRDC1_ETAG) { // Check that we are at the end of the subpacket
             //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
@@ -654,7 +666,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           endsubpacket = *pData++; 
           wCounter++;
 
-          //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
+          if (display) std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != XLM_CRDC2_ETAG) { // Check that we are at the end of the subpacket
             //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
@@ -701,7 +713,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           endsubpacket = *pData++; 
           wCounter++;
 
-          //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
+	  if (display) std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != XLM_PPAC_ETAG) { // Check that we are at the end of the subpacket
             //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
@@ -746,7 +758,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           endsubpacket = *pData++; 
           wCounter++;
 
-          //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
+          if (display) std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != MTDC_ETAG) { // Check that we are at the end of the subpacket
             //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
@@ -796,9 +808,17 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
 
 	      m_error[9] += 1;
               status = 1;
-              return status;
-
             }
+
+	    if ( (m_prevtstampccusb != 0) && (pEvent->timestamp[timeflag] <= m_prevtstampccusb) ) {
+	      std::stringstream msg;
+	      msg << " *** ERROR: Non-increasing ULM timestamp!!!!!!!";
+	      Actions::Error ( msg.str() ); 
+	      m_error[18] += 1;   
+	      status = 1;
+	    } 
+	    m_prevtstampccusb = pEvent->timestamp[timeflag];
+	    if (status != 0) return status;
 
           } else {
             //std::cerr << "*** ERROR: duplicated subpacket tag!!!!!!!"  << std::hex << subpacket << std::endl;
@@ -815,7 +835,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           endsubpacket = *pData++; 
           wCounter++;
 
-          //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
+          if (display) std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != ULM_ETAG) { // Check that we are at the end of the subpacket
             //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
@@ -860,7 +880,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           endsubpacket = *pData++; 
           wCounter++;
 
-          //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
+          if (display) std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != FERA_ETAG) { // Check that we are at the end of the subpacket
             //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
@@ -908,7 +928,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           endsubpacket = *pData++; 
           wCounter++;
 
-          //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
+          if (display) std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != PHILLIPS_ADC_IONCHAMBER_ETAG) { // Check that we are at the end of the subpacket
             //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
@@ -960,7 +980,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           endsubpacket = *pData++; 
           wCounter++;
 
-          //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
+          if (display) std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != REGISTER_ETAG) { // Check that we are at the end of the subpacket
             //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
@@ -1008,7 +1028,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           endsubpacket = *pData++; 
           wCounter++;
 
-          //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
+           if (display) std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != PHILLIPS_ADC_HODOSCOPE1_ETAG) { // Check that we are at the end of the subpacket
             //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
@@ -1057,7 +1077,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           endsubpacket = *pData++; 
           wCounter++;
 
-          //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
+          if (display) std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != PHILLIPS_ADC_HODOSCOPE2_ETAG) { // Check that we are at the end of the subpacket
             //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
@@ -1108,7 +1128,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           endsubpacket = *pData++; 
           wCounter++;
 
-          //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
+          if (display) std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != PHILLIPS_ADC_S800_ETAG) { // Check that we are at the end of the subpacket
             //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
@@ -1156,7 +1176,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           endsubpacket = *pData++; 
           wCounter++;
 
-          //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
+          if (display) std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != PHILLIPS_TDC_S800_ETAG) { // Check that we are at the end of the subpacket
             //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
@@ -1210,7 +1230,7 @@ int CS800Filter::parseData(uint32_t hid, size_t bsize, uint64_t htime, uint16_t*
           endsubpacket = *pData++; 
           wCounter++;
 
-          //std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
+          if (display) std::cout << "End-of-subpacket tag: "  << std::hex << endsubpacket << ". Counted words: " << std::dec << wCounter << std::endl;
 
           if (endsubpacket != PHILLIPS_TDC_LABR_ETAG) { // Check that we are at the end of the subpacket
             //std::cerr << "*** ERROR: Missing end-of-subpacket tag!!!!!!!"  << std::hex << endsubpacket << std::endl;
@@ -1351,6 +1371,8 @@ uint16_t*  CS800Filter::DecodeXLMpads(uint16_t* pPaddata, EventType* pPad, int d
   uint16_t temp16;
   uint32_t temp32,npads,maxpads;
 
+  bool display=false;
+
 
   if (det == 0 || det == 1) {
 
@@ -1374,6 +1396,9 @@ uint16_t*  CS800Filter::DecodeXLMpads(uint16_t* pPaddata, EventType* pPad, int d
   temp32 = *pPaddata++;
   nbytes |= temp32 << 16;
   npads = nbytes/sizeof(uint64_t);
+
+
+  if (display) std::cout << "Number of bytes: " << std::dec << nbytes << "  and pads: " << npads << std::endl;
 
   if (npads > maxpads) {
     /* attempt to skip over */
@@ -1400,19 +1425,23 @@ uint16_t*  CS800Filter::DecodeXLMpads(uint16_t* pPaddata, EventType* pPad, int d
       pPad->det_pads[det][i].d[3] = 0;
 
       temp16 = *pPaddata++;
-      pPad->det_pads[det][i].d[0] = temp16&0x3FF;
+      if (display) std::cout << std::hex << temp16 << std::endl;
+      pPad->det_pads[det][i].d[0] = temp16 & 0x3FF;
 
-      pPad->det_pads[det][i].d[1] = (temp16&0xFC00)>>10;
+      pPad->det_pads[det][i].d[1] = (temp16 & 0xFC00) >> 10;
       temp16 = *pPaddata++;
-      pPad->det_pads[det][i].d[1] |= (temp16&0xF)<<6;
+      if (display) std::cout << std::hex << temp16 << std::endl;
+      pPad->det_pads[det][i].d[1] |= (temp16 & 0xF) << 6;
 
-      pPad->det_pads[det][i].d[2] = (temp16&0x3FF0)>>4;
-
-      temp16 = *pPaddata++;
-      pPad->det_pads[det][i].d[3] = temp16&0x3FF;
+      pPad->det_pads[det][i].d[2] = (temp16 & 0x3FF0) >> 4;
 
       temp16 = *pPaddata++;
-      pPad->det_pads[det][i].sch = temp16&0x7FF;   
+      if (display) std::cout << std::hex << temp16 << std::endl;
+      pPad->det_pads[det][i].d[3] = temp16 & 0x3FF;
+
+      temp16 = *pPaddata++;
+      if (display) std::cout << std::hex << temp16 << std::endl;
+      pPad->det_pads[det][i].sch = temp16 & 0x7FF;   
 
     }
   }
@@ -1427,40 +1456,108 @@ uint16_t*  CS800Filter::DecodeXLMpads(uint16_t* pPaddata, EventType* pPad, int d
 uint16_t*  CS800Filter::DecodeMTDC(uint16_t* pMTDCdata, EventType* pMTDC, int status) 
 {
 
-  int i,channel;
+  int i,channel,crap=-1;
 
   uint16_t temp16;
 
+
+  /* Two different anomalous behaviors were seen sometimes when rates are very high:  */
+  /* 1. MTDC sends only a bunch of ffff words                                         */
+  /* 2. MTDC "sends" few "unknown" words                                              */
+  /* At the present time, the reason for these behaviors is not yet understood (no    */
+  /* documentation found in manual). In order to avoid this "bug"                     */
+  /* we configured the MTDC to have module id=0 and subheader=0 so that the second    */
+  /* 16-bit word of the header (bits 16-31) has always the value 4000 (bit 31=0 and   */
+  /* bit 30 = 0 (hsig), bits 16-29 = 0 (module id =0, subheader = 0)                  */
+  /* It is very unlikely that any of those "unknown" words match this value           */
+
+
+  while (*pMTDCdata == 0xFFFF) { // skip all ffff words seen in the beginning (if any)
+
+    //std::cout << std::hex << *pMTDCdata << std::endl;
+
+    pMTDCdata++; 
+
+    if (*pMTDCdata == MTDC_ETAG) { //If there was nothing useful, return
+      pMTDC = NULL;
+      return pMTDCdata;
+    }
+  }
+
+
+  while (*pMTDCdata != 0x4000) {
+
+    pMTDCdata++;
+    crap += 1; // Count crap words (we started at -1 because 4000 is in the second word of a good header)
+
+    if (*pMTDCdata == MTDC_ETAG) { //If there was nothing useful, return....and scream
+
+      std::stringstream msg;
+      msg << " *** Warning: anomalous event seen in mesytec TDC !!!! ";
+      Actions::Warning ( msg.str() ); 
+
+      pMTDC = NULL;
+      return pMTDCdata;
+    }
+  }
+  pMTDCdata--; // 4000 was found, so move one word back to read the full header
+
+
+  if (crap > 0) {
+    std::stringstream msg;
+    msg << " *** Warning: anomalous event seen in mesytec TDC !!!! ";
+    Actions::Warning ( msg.str() ); 
+  }
+
+
+
   /* Read header stuff */ 
   temp16 = *pMTDCdata++;
-  pMTDC->mtdc.header.format = (temp16 & 0x8000)>>15; 
-  pMTDC->mtdc.header.adc_res = (temp16 & 7000)>>12;
-  pMTDC->mtdc.header.nwords = temp16 & 0xFFF;
 
+  /* Commented next two lines because it only applies to MADC, not MTDC        */
+  /* MTDC header doesn't include any "format"                                  */
+  /* MTDC resolution is coded in bits 12-15 of header, not 12-14 like the MADC */
+  /* JP 9/27/2017                                                              */
+  //pMTDC->mtdc.header.format = (temp16 & 0x8000)>>15; 
+  //pMTDC->mtdc.header.adc_res = (temp16 & 7000)>>12;
+  pMTDC->mtdc.header.format = 0; 
+  pMTDC->mtdc.header.adc_res = (temp16 & 0xF000)>>12; // Resolution masked in bits 12-15
+  pMTDC->mtdc.header.nwords = temp16 & 0xFFF;
+  
   temp16 = *pMTDCdata++;
   pMTDC->mtdc.header.hsig = (temp16 & 0xC000)>>14;
   pMTDC->mtdc.header.subheader = (temp16 & 0x3F00)>>8; 
   pMTDC->mtdc.header.module_id = temp16 & 0xFF; 
 
-  if (pMTDC->mtdc.header.nwords-1 > 32) {
-    //std::cerr << "*** ERROR: too many channels seen for mesytec TDC !!!! "  << std::dec << pMTDC->mtdc.header.nwords << std::endl;
-    std::stringstream msg;
-    msg << " *** ERROR: too many channels seen for mesytec TDC !!!! ";
-    Actions::Error ( msg.str() ); 
-    m_error[15] += 1;
-    status = 1;
-    return pMTDCdata;
-  }
+
+  //if (pMTDC->mtdc.header.nwords-1 > 32) {
+  //  //std::cerr << "*** ERROR: too many channels seen for mesytec TDC !!!! "  << std::dec << pMTDC->mtdc.header.nwords << std::endl;
+  //  std::stringstream msg;
+  //  msg << " *** ERROR: too many channels seen for mesytec TDC !!!! " << pMTDC->mtdc.header.nwords-1;
+  //  Actions::Error ( msg.str() ); 
+  //  m_error[15] += 1;
+  //  status = 1;
+  //  return pMTDCdata;
+  // }
 
   for (i=0; i < 32; i++) pMTDC->mtdc.hits[i] = 0; // Init hit counts to zero
 
   for (i=0; i < pMTDC->mtdc.header.nwords-1; i++) {
     temp16 = *pMTDCdata++;
     channel = *pMTDCdata & 0x1F;
-    if ((*pMTDCdata++ & 0x0400) == 0x0400) {
-      pMTDC->mtdc.data[channel][pMTDC->mtdc.hits[channel]] = temp16 & 0xFFFF;
-      pMTDC->mtdc.hits[channel]++;
+    if (pMTDC->mtdc.hits[channel] < 32) { // We currently accept a maximum of 32 multi-hit events per channel
+                                          
+      if ((*pMTDCdata++ & 0x0400) == 0x0400) {
+	pMTDC->mtdc.data[channel][pMTDC->mtdc.hits[channel]] = temp16 & 0xFFFF;
+	pMTDC->mtdc.hits[channel]++;
+      } 
+
+    } else { // Ignore larger multihit numbers...but send a warning
+      std::stringstream msg;
+      msg << " *** Warning: too many multihits per channel seen in mesytec TDC !!!! ";
+      Actions::Warning ( msg.str() ); 
     }
+
   }
 
   pMTDC->mtdc.ender.tcts = *pMTDCdata++;
@@ -2004,10 +2101,21 @@ CRingItem* CS800Filter::handleStateChangeItem(CRingStateChangeItem* pItem)
 {
 	assert(pItem);
 
+
 	if (pItem->type() == BEGIN_RUN) {
-		resetCounters();
+	  //resetCounters();
+	  if (!m_BOR) { 
+	    resetCounters();
+	    m_BOR = true;
+	    m_EOR = false;
+	  }
 	} else if (pItem->type() == END_RUN) {
-		printCounterSummary();
+	  //printCounterSummary();
+	  if (!m_EOR) {
+	    printCounterSummary();
+	    m_BOR = false;
+	    m_EOR = true;
+	  }
 	}	
 
 	return pItem;
@@ -2028,11 +2136,16 @@ void CS800Filter::resetCounters()
   m_error[8] = 0;
   m_error[9] = 0;
   m_error[10] = 0;
-  m_error[11] = 0;
-  m_error[12] = 0;
+  m_error[11] = 0; 
+  m_error[12] = 0; 
   m_error[13] = 0;
   m_error[14] = 0;
   m_error[15] = 0;
+
+  m_prevtstampvmusb = 0;
+  m_prevtstampccusb = 0;
+  m_prevevnum = 0;
+
 
   std::stringstream msg;
   msg << " SET ERROR COUNTERS TO ZERO";
@@ -2041,6 +2154,8 @@ void CS800Filter::resetCounters()
 
 void CS800Filter::printCounterSummary()
 {
+   
+
   std::cout << "\nERROR COUNTER RESULTS" << std::endl;
 
   std::cout << "ERROR 1. Number of fragments in RingItem is not 2:                           " << m_error[1] << std::endl;
@@ -2048,7 +2163,7 @@ void CS800Filter::printCounterSummary()
   std::cout << "ERROR 3. Duplicated source ID:                                               " << m_error[3] << std::endl;
   std::cout << "ERROR 4. Corrupted timestamp = 0:                                            " << m_error[4] << std::endl;
   std::cout << "ERROR 5. Uncorrelated fragments (different timestamps):                      " << m_error[5] << std::endl;
-  std::cout << "ERROR 6. Body size value from body different than value from header:         " << m_error[6] << std::endl;
+  std::cout << "ERROR 6. Body size value from body and header differ (OBSOLETE):             " << m_error[6] << std::endl;
   std::cout << "ERROR 7. Missing end-of-packet tag:                                          " << m_error[7] << std::endl;
   std::cout << "ERROR 8. Duplicated packet tag:                                              " << m_error[8] << std::endl;
   std::cout << "ERROR 9. Timestamp from header different than decoded timestamp from body:   " << m_error[9] << std::endl;
@@ -2057,12 +2172,17 @@ void CS800Filter::printCounterSummary()
   std::cout << "ERROR 12. Unknown controller type:                                           " << m_error[12] << std::endl;
   std::cout << "ERROR 13. Unknown PAD detector type:                                         " << m_error[13] << std::endl;
   std::cout << "ERROR 14. Too many pads in PAD detector:                                     " << m_error[14] << std::endl;
-  std::cout << "ERROR 15. Too many MTDC channels:                                            " << m_error[15] << std::endl;
+  std::cout << "ERROR 15. Too many MTDC channels (OBSOLETE):                                 " << m_error[15] << std::endl;
+  std::cout << "ERROR 16. Non-contiguous event number:                                       " << m_error[16] << std::endl;
+  std::cout << "ERROR 17. Non-increasing XLM timestamp:                                      " << m_error[17] << std::endl;
+  std::cout << "ERROR 18. Non-increasing ULM timestamp:                                      " << m_error[18] << std::endl;
   std::cout << "\nTOTAL NUMBER OF EVENTS:                                                    " << m_eventCount << std::endl;
 
   std::cout << "----------------------------------------" << std::endl;
 
 }
+
+
 
 void CS800Filter::initialize() 
 {
@@ -2077,7 +2197,7 @@ CRingItem* CS800Filter::handleScalerItem(CRingScalerItem* item) {
   //++m_eventCount;
   
   int i;
-  int offset = 1;
+  int offset = 1;  
 
   CRingScalerItem* product;
 

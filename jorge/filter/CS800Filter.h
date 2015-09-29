@@ -262,7 +262,14 @@ class CS800Filter : public CFilter
        std::map<uint16_t,std::vector<uint16_t> > m_sortedData;
        std::map<uint16_t,bool> m_found; // Map to keep track of tags found
        int m_eventCount;
+
+       uint64_t m_prevtstampvmusb;
+       uint64_t m_prevtstampccusb;
+       uint64_t m_prevevnum;
+
        int m_eventCountLastError;
+       bool m_BOR;
+       bool m_EOR;
        std::map<uint16_t,uint16_t> m_error;
 
 
@@ -292,7 +299,7 @@ class CS800Filter : public CFilter
 
 
     private:
-       int parseData(uint32_t hid, size_t size, uint64_t htime, uint16_t* data, EventType* pEvent);
+       int parseData(uint32_t hid, size_t size, uint64_t htime, uint16_t* data, uint16_t* tdata, EventType* pEvent);
        int countTrue(std::map<uint16_t,bool> mmap);
        uint16_t* DecodeXLMTimestamp(uint16_t* pTimedata, EventType* pXLMTime, int flag, int status);
        uint16_t* DecodeULMTimestamp(uint16_t* pTimedata, EventType* pULMTime, int flag, int status);

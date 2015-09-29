@@ -162,6 +162,7 @@ class S800FilterTest : public CppUnit::TestFixture
         pItem->getBodySize()/sizeof(uint16_t),
         pItem->getEventTimestamp(),
         pBody,
+        pBody,
         &event);
 
     CPPUNIT_ASSERT_EQUAL_MESSAGE("ULM Trigger pattern",
@@ -237,6 +238,7 @@ class S800FilterTest : public CppUnit::TestFixture
     int status = pFilter->parseData(pItem->getSourceId(),
                                     pItem->getBodySize()/sizeof(uint16_t),
                                     pItem->getEventTimestamp(),
+                                    pBody,
                                     pBody,
                                     &event);
 
