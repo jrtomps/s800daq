@@ -72,9 +72,24 @@ puts "\tInitializing Trigger2367"
 # Temporarily removed to achieve continuous time stamp mode (Sam's experiment) ??????????
 trigger Go 0; # Inhibit triggers and time stamp clock
 trigger Clear; # Clear latches, trigger register and time stamp
-trigger Enable 0; # Enable external sync signal
+
+set extsynch 0; # Enable/Disable external sync signal
+set extclock 0; # 0: internal clock 1: external clock
+if {$extsynch == 1} {
+     puts "-- External Synchronization required by ULM"
+}
+if {$extclock == 1 } {
+     puts "-- External clock required by ULM"
+} else {
+     puts "-- Internal clock enabled"
+}
+trigger Enable $extsynch 
+trigger Select $extclock
 initATrigger2367 $CCUSB 17 /user/s800/operations/daq/usb/Configs/s800trigger.tcl
-trigger Select 0; # 0: internal clock 1: external clock
+
+
+
+
 
 
 
@@ -87,7 +102,7 @@ trigger Select 0; # 0: internal clock 1: external clock
 #cfd SetWidth 1 $CFD2(widthA)
 #cfd SetDeadTime 1 0
 #
-#hcfd1 Enable 0 0xFF
+#hcfd1 Enable 0 0xFF 
 #hcfd1 Enable 1 0xFF
 #for {set i 0} {$i < 16} {incr i 2} {hcfd1 Threshold $i 7}
 #for {set i 1} {$i < 16} {incr i 2} {hcfd1 Threshold $i 7}
