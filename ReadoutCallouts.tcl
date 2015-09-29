@@ -5,6 +5,7 @@ lappend auto_path $here
 package require evbcallouts 
 package require ActionFilter
 package require ReadoutGuiRemoteControl
+package require multilogger
 
 
 ActionFilter::register
