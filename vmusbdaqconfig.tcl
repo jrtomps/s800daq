@@ -33,11 +33,14 @@ marker create mtdcFinishTag $mtdcFinish
 
 
 #################
-# Script driver for XLM (CRDCs, PPACs, Delay box), and Hosocope/IC shapers
+# -- XLMV72's: CRDCs, PPACs, Delay box --
+# -- IC/Hodoscope CAEN shappers --
+#
+# Script drivers for XLM (CRDCs, PPACs, Delay box), and Hodocope/IC shapers 
 # It runs the VM0079Begin, VM0079Event, and VM0079End scripts
 readoutscript rdoScript -controllertype vmusb
-rdoScript configure -initscript Scripts/VM0079Begin.tcl 
-rdoScript configure -rdolistscript Scripts/VM0079Event.tcl
+rdoScript configure -initscript Scripts/VM0079Begin.tcl; # Configuration files for modules 
+rdoScript configure -rdolistscript Scripts/VM0079Event.tcl; # Include readout of XLMV72 modules (CRDCs and TPPACs)
 #rdoScript config -onendlist Scripts/VM0079End.tcl
 addtcldriver rdoScript
 
@@ -63,8 +66,9 @@ mtdc config tdc -maxtransfers 1
 mtdc config tdc -datalen 32
 mtdc config tdc -resolution 62.5ps
 mtdc config tdc -bank0triggersource Tr0
-mtdc config tdc -bank0winstart 15384; # -1000 ns (16384 corresponds to 0)
-mtdc config tdc -bank0winwidth 1000 ;# Window with (ns)
+mtdc config tdc -bank0winstart 14384; # -2000 ns (16384 corresponds to 0)
+mtdc config tdc -bank0winwidth 4000 ;# Window with (ns)
+
 
 
 
